@@ -1,0 +1,7 @@
+~/RISCV_Core/execute.v
+~/RISCV_Core/memory.v
+~/RISCV_Core/memoryFile.v
+~/RISCV_Core/writeback.v
+~/RISCV_Core/instructionCache.v
+~/RISCV_Core/registerFile.v
+~/RISCV_Core/fetch.v
