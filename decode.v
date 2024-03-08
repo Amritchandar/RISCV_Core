@@ -15,11 +15,14 @@ module decode_stage(
     output reg [63:0] MEM_ADDRESS, // Memory address for load/store
     output EXE_Vout, // Output to indicate if the decode stage has a valid instruction
     output reg [31:0] EXE_IR, // Output the instruction to the execute stage
-    output reg stall
+    output reg stall,
+    output V_DE_FE_BR_STALL
     
 );
     reg EXE_V;
     assign EXE_Vout = EXE_V;
+    assign V_DE_FE_BR_STALL = DE_V && ((DE_IR[6:2] ==5'b11000) || (DE_IR[6:2] ==5'b11001) || (DE_IR[6:2] ==5'b11011));
+
     wire [6:0] opcode = DE_IR[6:0];
     wire [4:0] rs1 = DE_IR[19:15];
     wire [4:0] rs2 = DE_IR[24:20];
