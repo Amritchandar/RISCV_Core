@@ -33,40 +33,26 @@ module decode_stage(
         if (RESET) begin
             EXE_V <= 1'b0;
         end else begin
-            stall <= 0; 
-            EXE_V <= DE_V; 
-            EXE_IR <= DE_IR; 
-            ALU1 <= 64'd0;
-            ALU2 <= 64'd0;
-            immediate <= 64'd0;
-            TARGET_ADDRESS <= 64'd0;
-            MEM_ADDRESS <= 64'd0;
-
             if (EXE_V && ((EXE_DR == rs1) || (EXE_DR == rs2))) begin
                 stall <= 1;
-                EXE_V <= 0; 
             end else if (MEM_V && ((MEM_DR == rs1) || (MEM_DR == rs2))) begin
                 stall <= 1;
-                MEM_V <= 0; 
             end else if (WB_V && ((WB_DR == rs1) || (WB_DR == rs2))) begin
                 stall <= 1;
-                MEM_V <= 0; 
             end else if (!stall && DE_V) begin // Process the instruction if it is valid
                 case (opcode)
                     // I-type (Load instructions)
                     7'b0000011: begin
-                        immediate <= {{52{DE_IR[31]}}, DE_IR[31:20]};
                         ALU1 <= reg_file_out1; // Base address
-                        ALU2 <= immediate; // Offset
-                        MEM_ADDRESS <= reg_file_out1 + immediate; // Address for load
+                        ALU2 <= {{52{DE_IR[31]}}, DE_IR[31:20]}; // Offset
+                        MEM_ADDRESS <= reg_file_out1 + {{52{DE_IR[31]}}, DE_IR[31:20]}; // Address for load
                     end
 
                     // S-type (Store instructions)
                     7'b0100011: begin
-                        immediate <= {{52{DE_IR[31]}}, DE_IR[31:25], DE_IR[11:7]};
                         ALU1 <= reg_file_out1; // Base address
                         ALU2 <= reg_file_out2; // Value to store
-                        MEM_ADDRESS <= reg_file_out1 + immediate; // Address for store
+                        MEM_ADDRESS <= reg_file_out1 + {{52{DE_IR[31]}}, DE_IR[31:25], DE_IR[11:7]}; // Address for store
                     end
 
                     // R-type (ALU operations with two registers)
@@ -77,25 +63,22 @@ module decode_stage(
 
                     // B-type (Branch instructions)
                     7'b1100011: begin
-                        immediate <= {{51{DE_IR[31]}}, DE_IR[31], DE_IR[7], DE_IR[30:25], DE_IR[11:8], 1'b0};
                         ALU1 <= reg_file_out1;
                         ALU2 <= reg_file_out2;
-                        TARGET_ADDRESS <= DE_NPC + immediate;
+                        TARGET_ADDRESS <= DE_NPC + {{51{DE_IR[31]}}, DE_IR[31], DE_IR[7], DE_IR[30:25], DE_IR[11:8], 1'b0};
                     end
 
                     // U-type (Immediate instructions with upper 20 bits)
                     7'b0110111, 7'b0010111: begin
-                        immediate <= {{32{DE_IR[31]}}, DE_IR[31:12], {12{1'b0}}};
-                        ALU1 <= immediate;
+                        ALU1 <= {{32{DE_IR[31]}}, DE_IR[31:12], {12{1'b0}}};
                         ALU2 <= 64'd0;
                     end
 
                     // J-type (Jump instructions)
                     7'b1101111: begin
-                        immediate <= {{43{DE_IR[31]}}, DE_IR[19:12], DE_IR[20], DE_IR[30:21], 1'b0};
                         ALU1 <= DE_NPC;
-                        ALU2 <= immediate;
-                        TARGET_ADDRESS <= DE_NPC + immediate;
+                        ALU2 <= {{43{DE_IR[31]}}, DE_IR[19:12], DE_IR[20], DE_IR[30:21], 1'b0};
+                        TARGET_ADDRESS <= DE_NPC + {{43{DE_IR[31]}}, DE_IR[19:12], DE_IR[20], DE_IR[30:21], 1'b0};
                     end
 
                     default: begin
