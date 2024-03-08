@@ -16,10 +16,12 @@ module decode_stage(
     output EXE_Vout, // Output to indicate if the decode stage has a valid instruction
     output reg [31:0] EXE_IR, // Output the instruction to the execute stage
     output reg stall,
-    output V_DE_FE_BR_STALL
-    
+    output reg [63:0] EXE_NPC,
+    output V_DE_FE_BR_STALL,
+    output [3:0] EXE_Cst
 );
     reg EXE_V;
+    assign EXE_Cst = 4'b0;
     assign EXE_Vout = EXE_V;
     assign V_DE_FE_BR_STALL = DE_V && ((DE_IR[6:2] ==5'b11000) || (DE_IR[6:2] ==5'b11001) || (DE_IR[6:2] ==5'b11011));
 
@@ -36,6 +38,7 @@ module decode_stage(
         if (RESET) begin
             EXE_V <= 1'b0;
         end else begin
+            EXE_NPC <= DE_NPC;
             if (EXE_V && ((EXE_DR == rs1) || (EXE_DR == rs2))) begin
                 stall <= 1;
             end else if (MEM_V && ((MEM_DR == rs1) || (MEM_DR == rs2))) begin
