@@ -25,9 +25,7 @@ module decode_stage(
     wire [4:0] rs2 = DE_IR[24:20];
     wire [4:0] rd = DE_IR[11:7];
 
-    reg [63:0] immediate; // Immediate value for ALU operations
-
-    // Get register file outputs
+    reg [63:0] immediate; 
     wire [63:0] reg_file_out1; // rs1 content
     wire [63:0] reg_file_out2; // rs2 content
 
