@@ -24,15 +24,13 @@ always @(posedge CLK) begin
         FE_PC <= 'd0; 
     end else if (!(V_DEP_STALL || V_DE_FE_BR_STALL || V_EXE_FE_BR_STALL ||V_MEM_FE_BR_STALL)) begin
         if (OUT_FE_PC_MUX) begin
-            FE_PC <= FE_PC + 64'd4;
-        end else begin
             FE_PC <= OUT_FE_Target_Address;
+        end else begin
+            FE_PC <= FE_PC + 64'd4;
         end
     end
 
     if (RESET) begin
-        DE_NPC <= 64'd0;
-        DE_IR <= 32'd0;
         DE_V <= 1'b0;
     end else if (!V_DEP_STALL) begin
         DE_NPC <= FE_PC + 64'd4;

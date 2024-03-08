@@ -31,7 +31,7 @@ wire V_MEM_FE_BR_STALL, WB_V, WB_PC_MUX;
 //Writeback Stage
 wire [63:0] OUT_FE_Target_Address, OUT_DE_Data;
 wire [4:0] OUT_DE_DR, WB_DR;
-wire OUT_FE_PC_MUX, OUT_FE_REG_WEN;
+wire OUT_FE_PC_MUX, OUT_DE_REG_WEN;
 
 fetch fetch_stage (
     .CLK(CLK), 
@@ -67,7 +67,10 @@ decode_stage decode_stage(
     .EXE_IR(EXE_IR),
     .EXE_NPC(EXE_NPC),
     .EXE_Cst(EXE_Cst),
-    .stall(V_DEP_STALL)
+    .stall(V_DEP_STALL),
+    .OUT_DE_DR(OUT_DE_DR),
+    .OUT_DE_Data(OUT_DE_Data),
+    .OUT_DE_REG_WEN(OUT_DE_REG_WEN)
 );
 
 execute execute_stage (
@@ -125,7 +128,7 @@ writeback writeback_stage (
     .WB_Target_Address(WB_Target_Address),
     .OUT_FE_Target_Address(OUT_FE_Target_Address),
     .OUT_FE_PC_MUX(OUT_FE_PC_MUX),
-    .OUT_FE_REG_WEN(OUT_FE_REG_WEN),
+    .OUT_DE_REG_WEN(OUT_DE_REG_WEN),
     .OUT_DE_DR(OUT_DE_DR),
     .OUT_DE_Data(OUT_DE_Data),
     .WB_DR(WB_DR)

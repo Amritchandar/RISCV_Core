@@ -8,7 +8,7 @@ module writeback(
     input [63:0] WB_Target_Address,
     output [63:0] OUT_FE_Target_Address,
     output OUT_FE_PC_MUX,
-    output OUT_FE_REG_WEN,
+    output OUT_DE_REG_WEN,
     output [4:0] OUT_DE_DR,
     output [63:0] OUT_DE_Data,
     output [4:0] WB_DR
@@ -23,7 +23,7 @@ assign OUT_FE_Target_Address = WB_Target_Address;
 assign OUT_FE_PC_MUX = WB_V && WB_PC_MUX;
 
 //Stores to the register file
-assign OUT_FE_REG_WEN = (`WB_Cst_Reg_Wen) && WB_V;
+assign OUT_DE_REG_WEN = (`WB_Cst_Reg_Wen) && WB_V;
 assign OUT_DE_DR = `DR;
 assign OUT_DE_Data = WB_RES;
 endmodule

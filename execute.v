@@ -174,6 +174,7 @@ always @(posedge CLK) begin
         MEM_Address <= EXE_Address;
         MEM_V <= EXE_V;
         MEM_NPC <= EXE_NPC;
+        MEM_IR <= EXE_IR;
     end
 end
 endmodule
