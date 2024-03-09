@@ -18,6 +18,7 @@ module  execute (
     output reg [31:0] MEM_IR,
     output reg [63:0] MEM_NPC,
     output V_EXE_FE_BR_STALL,
+    output V_EXE_FE_TRAP_STALL,
     output reg [63:0] MEM_Address,
     output [4:0] EXE_DR
 );
@@ -35,6 +36,7 @@ assign EXE_Unsigned_MUL = $unsigned(EXE_ALU1) * $unsigned(EXE_ALU2);
 assign EXE_Signed_MUL = $signed(EXE_ALU1) * $signed(EXE_ALU2);
 assign EXE_Signed_Unsigned_MUL = $signed(EXE_ALU1) * $unsigned(EXE_ALU2);
 assign V_EXE_FE_BR_STALL = EXE_V && ((EXE_IR[6:2] ==5'b11000) || (EXE_IR[6:2] ==5'b11001) || (EXE_IR[6:2] ==5'b11011));
+assign V_EXE_FE_TRAP_STALL = (EXE_V && (EXE_IR[27:0] == 28'h0000073)) ? 1'd1 : 1'd0;
 
 always @(posedge CLK) begin
     //Branch Comparisons

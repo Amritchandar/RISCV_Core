@@ -6,6 +6,9 @@ module fetch (
     input V_DE_FE_BR_STALL,
     input V_EXE_FE_BR_STALL,
     input V_MEM_FE_BR_STALL,
+    input V_DE_FE_TRAP_STALL,
+    input V_EXE_FE_TRAP_STALL,
+    input V_MEM_FE_TRAP_STALL,
     input V_DEP_STALL,
     input CLK,
     input RESET,
@@ -22,7 +25,7 @@ wire [31:0] FE_instruction;
 always @(posedge CLK) begin
     if (RESET) begin
         FE_PC <= 'd0; 
-    end else if (!(V_DEP_STALL || V_DE_FE_BR_STALL || V_EXE_FE_BR_STALL ||V_MEM_FE_BR_STALL)) begin
+    end else if (!(V_DEP_STALL || V_DE_FE_BR_STALL || V_EXE_FE_BR_STALL ||V_MEM_FE_BR_STALL || V_DE_FE_TRAP_STALL || V_EXE_FE_TRAP_STALL ||V_MEM_FE_TRAP_STALL)) begin
         if (OUT_FE_PC_MUX) begin
             FE_PC <= OUT_FE_Target_Address;
         end else begin
@@ -35,7 +38,7 @@ always @(posedge CLK) begin
     end else if (!V_DEP_STALL) begin
         DE_NPC <= FE_PC + 64'd4;
         DE_IR <= FE_instruction;
-        DE_V <= !V_DE_FE_BR_STALL && !V_EXE_FE_BR_STALL && !V_MEM_FE_BR_STALL;  
+        DE_V <= !V_DE_FE_BR_STALL && !V_EXE_FE_BR_STALL && !V_MEM_FE_BR_STALL && V_DE_FE_TRAP_STALL && !V_EXE_FE_TRAP_STALL && !V_MEM_FE_TRAP_STALL;  
     end 
 end
 

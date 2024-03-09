@@ -12,21 +12,21 @@ wire DE_V;
 wire [63:0] EXE_ALU1, EXE_ALU2, EXE_Target_Address, EXE_Address, EXE_NPC;
 wire [31:0] EXE_IR;
 wire [16:0] EXE_Cst;
-wire EXE_V, V_DEP_STALL, V_DE_FE_BR_STALL;
+wire EXE_V, V_DEP_STALL, V_DE_FE_BR_STALL, V_DE_FE_TRAP_STALL;
 
 //Execute Stage
 wire [63:0] MEM_Target_Address, MEM_RES, MEM_NPC, MEM_Address;
 wire [31:0] MEM_IR;
 wire [16:0] MEM_Cst;
 wire [4:0] EXE_DR;
-wire MEM_V, MEM_PC_MUX, V_EXE_FE_BR_STALL;
+wire MEM_V, MEM_PC_MUX, V_EXE_FE_BR_STALL, V_EXE_FE_TRAP_STALL;
 
 //Memory Stage
 wire [63:0] WB_RES, WB_NPC, WB_Target_Address;
 wire [31:0] WB_IR;
 wire [16:0] WB_Cst;
 wire [4:0] MEM_DR;
-wire V_MEM_FE_BR_STALL, WB_V, WB_PC_MUX;
+wire V_MEM_FE_BR_STALL, V_MEM_FE_TRAP_STALL, WB_V, WB_PC_MUX;
 
 //Writeback Stage
 wire [63:0] OUT_FE_Target_Address, OUT_DE_Data;
@@ -44,6 +44,9 @@ fetch fetch_stage (
     .V_DE_FE_BR_STALL(V_DE_FE_BR_STALL),
     .V_EXE_FE_BR_STALL(V_EXE_FE_BR_STALL),
     .V_MEM_FE_BR_STALL(V_MEM_FE_BR_STALL),
+    .V_DE_FE_TRAP_STALL(V_DE_FE_TRAP_STALL),
+    .V_EXE_FE_TRAP_STALL(V_EXE_FE_TRAP_STALL),
+    .V_MEM_FE_TRAP_STALL(V_MEM_FE_TRAP_STALL),
     .V_DEP_STALL(V_DEP_STALL)
 );
 
@@ -61,6 +64,7 @@ decode_stage decode_stage(
     .ALU1(EXE_ALU1),
     .ALU2(EXE_ALU2),
     .V_DE_FE_BR_STALL(V_DE_FE_BR_STALL),
+    .V_DE_FE_TRAP_STALL(V_DE_FE_TRAP_STALL),
     .TARGET_ADDRESS(EXE_Target_Address),
     .MEM_ADDRESS(EXE_Address),
     .EXE_Vout(EXE_V),
@@ -92,6 +96,7 @@ execute execute_stage (
     .MEM_IR(MEM_IR),
     .MEM_NPC(MEM_NPC),
     .V_EXE_FE_BR_STALL(V_EXE_FE_BR_STALL),
+    .V_EXE_FE_TRAP_STALL(V_EXE_FE_TRAP_STALL),
     .MEM_Address(MEM_Address),
     .EXE_DR(EXE_DR)
 );
@@ -108,6 +113,7 @@ memory memory_stage (
     .MEM_Address(MEM_Address),
     .MEM_IR(MEM_IR),
     .V_MEM_FE_BR_STALL(V_MEM_FE_BR_STALL),
+    .V_MEM_FE_TRAP_STALL(V_MEM_FE_TRAP_STALL),
     .WB_V(WB_V),
     .WB_Cst(WB_Cst),
     .WB_RES(WB_RES),
