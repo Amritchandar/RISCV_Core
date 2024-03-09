@@ -103,8 +103,7 @@ always @(posedge CLK) begin
                 // S-type (Store instructions)
                 //STORE
                 5'b01000: begin
-                    ALU1 <= reg_file_out1; // Base address
-                    ALU2 <= reg_file_out2; // Value to store
+                    ALU1 <= reg_file_out2; // Value to store
                     MEM_ADDRESS <= reg_file_out1 + {{52{DE_IR[31]}}, DE_IR[31:25], DE_IR[11:7]}; // Address for store
                 end
 
