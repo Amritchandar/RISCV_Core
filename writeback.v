@@ -4,13 +4,17 @@ module writeback(
     input [63:0] WB_RES,
     input WB_PC_MUX,
     input [63:0] WB_NPC,
+    input [63:0] WB_CSRFD,
+    input [63:0] WB_RFD,
     input [31:0] WB_IR,
     input [63:0] WB_Target_Address,
     output [63:0] OUT_FE_Target_Address,
     output OUT_FE_PC_MUX,
     output OUT_DE_REG_WEN,
     output [4:0] OUT_DE_DR,
+    output [31:0] OUT_DE_IR,
     output [63:0] OUT_DE_Data,
+    output [63:0] OUT_DE_CSR_DATA,
     output [63:0] OUT_DE_CAUSE,
     output OUT_DE_CS,
     output [4:0] WB_DR
@@ -23,7 +27,7 @@ wire WB_ECALL;
 `define WB_Cst_W WB_Cst[17]
 
 assign WB_DR = WB_IR[11:7];
-
+assign OUT_DE_IR = WB_IR;
 //Chooses the correct next PC
 assign OUT_FE_Target_Address = WB_Target_Address;
 assign OUT_FE_PC_MUX = WB_V && WB_PC_MUX;
@@ -31,7 +35,8 @@ assign OUT_FE_PC_MUX = WB_V && WB_PC_MUX;
 //Stores to the register file
 assign OUT_DE_REG_WEN = (`WB_Cst_Reg_Wen) && WB_V;
 assign OUT_DE_DR = `DR;
-assign OUT_DE_Data = WB_RES;
+assign OUT_DE_Data = (WB_IR[6:0] == 7'b1110011) ? WB_RFD:WB_RES;
+assign OUT_DE_CSR_DATA = WB_CSRFD;
 
 assign OUT_DE_CAUSE = cause_temp;
 assign OUT_DE_CS = cs_temp;

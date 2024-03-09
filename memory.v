@@ -9,6 +9,8 @@ module memory(
     input MEM_PC_MUX,
     input [63:0] MEM_NPC,
     input [63:0] MEM_Address,
+    input [63:0] MEM_RFD,
+    input [63:0] MEM_CSRFD,
     input [31:0] MEM_IR,
     output V_MEM_FE_BR_STALL,
     output V_MEM_FE_TRAP_STALL,
@@ -19,6 +21,8 @@ module memory(
     output reg [63:0] WB_NPC,
     output reg [31:0] WB_IR,
     output reg [63:0] WB_Target_Address,
+    output reg [63:0] WB_RFD,
+    output reg [63:0] WB_CSRFD,
     output [4:0] MEM_DR
 );
 
@@ -51,6 +55,8 @@ always @(posedge CLK) begin
         WB_NPC <= MEM_NPC;
         WB_IR <= MEM_IR;
         WB_Target_Address <= MEM_Target_Address;
+        WB_RFD <= MEM_RFD;
+        WB_CSRFD <= MEM_CSRFD;
     end
 end
 endmodule

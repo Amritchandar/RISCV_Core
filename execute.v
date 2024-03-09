@@ -9,6 +9,8 @@ module  execute (
     input [18:0] EXE_Cst,
     input [63:0] EXE_NPC,
     input [63:0] EXE_Target_Address,
+    input [63:0] EXE_RFD,
+    input [63:0] EXE_CSRFD,
     input EXE_V,
     output reg MEM_V,
     output reg [63:0] MEM_Target_Address,
@@ -212,6 +214,8 @@ always @(posedge CLK) begin
         MEM_V <= EXE_V;
         MEM_NPC <= EXE_NPC;
         MEM_IR <= EXE_IR;
+        MEM_RFD <= EXE_RFD;
+        MEM_CSRD <= MEM_RFD;
     end
 end
 endmodule

@@ -7,7 +7,9 @@ module decode_stage(
     input [4:0] MEM_DR,
     input [4:0] WB_DR,
     input [4:0] OUT_DE_DR,
+    input [31:0] OUT_DE_IR,
     input [63:0] OUT_DE_Data,
+    input [63:0] OUT_DE_CSR_DATA,
     input OUT_DE_REG_WEN,
     input [63:0] OUT_DE_CAUSE,
     input        OUT_DE_CS,
@@ -23,11 +25,14 @@ module decode_stage(
     output reg [31:0] EXE_IR, // Output the instruction to the execute stage
     output reg stall,
     output reg [63:0] EXE_NPC,
+    output reg [63:0] EXE_RFD,
+    output reg [63:0] EXE_CSRFD,
     //output reg [1:0] EXE_TRAP, //signal propogated to writeback stage 
     output V_DE_FE_BR_STALL,
     output V_DE_FE_TRAP_STALL,
     output [16:0] EXE_Cst
     output reg [18:0] EXE_Cst
+
 );
 `define DE_Cst_Unsigned control_signals[18]
 wire [18:0] control_signals;
@@ -59,6 +64,23 @@ register_file register_file (
     .CLK(CLK)
 );
 
+csr_file csr(
+    .RESET(RESET),
+    .DR(OUT_DE_IR[31:20]),
+    .SR(DE_IR[31:20]),
+    .IR(DE_IR[31:0]),
+    .DATA(OUT_DE_CSR_DATA),
+    .ST_REG(WB_ST_CSR),
+    .CS(WB_CS),
+    .CAUSE(WB_CAUSE),
+    .DE_NPC(DE_NPC),
+    .OUT(exe_rfd_latch),
+    .PC_OUT(DE_MTVEC),
+    .CLK(CLK),
+    .DE_CS(DE_CS),
+    .PRIVILEGE(PRIVILEGE)
+    );
+
 always @(*) begin
     if (DE_V && EXE_V && ((EXE_DR == rs1) || (EXE_DR == rs2))) begin
         stall <= 1'b1;
@@ -71,23 +93,6 @@ always @(*) begin
     end
 end
 
-
-csr_file csr(
-    .RESET(RESET),
-    .DR(WB_IR[31:20]),
-    .SR(DE_IR[31:20]),
-    .IR(DE_IR[31:0]),
-    .DATA(WB_CSRFD),
-    .ST_REG(WB_ST_CSR),
-    .CS(WB_CS),
-    .CAUSE(WB_CAUSE),
-    .DE_NPC(DE_NPC),
-    .OUT(exe_rfd_latch),
-    .PC_OUT(DE_MTVEC),
-    .CLK(CLK),
-    .DE_CS(DE_CS),
-    .PRIVILEGE(PRIVILEGE)
-    );
 
 always @(posedge CLK) begin
     if (RESET) begin
@@ -107,6 +112,12 @@ always @(posedge CLK) begin
             EXE_V <= DE_V;
             case (opcode[6:2])
                 // I-type (Immediate Instructions)
+                //SYSTEM
+                5'b11100: begin
+                    EXE_CSRFD <= exe_rfd_latch;
+                    EXE_RFD <= reg_file_out1;
+                end
+
                 //LOAD
                 5'b00000: begin
                     // ALU1 <= reg_file_out1; // Base address
