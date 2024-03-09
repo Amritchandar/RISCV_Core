@@ -1,6 +1,6 @@
 module writeback(
     input WB_V,
-    input [16:0] WB_Cst,
+    input [18:0] WB_Cst,
     input [63:0] WB_RES,
     input WB_PC_MUX,
     input [63:0] WB_NPC,
@@ -15,6 +15,7 @@ module writeback(
 );
 `define DR WB_IR[11:7]
 `define WB_Cst_Reg_Wen WB_Cst[0]
+`define WB_Cst_W WB_Cst[17]
 
 assign WB_DR = WB_IR[11:7];
 
@@ -25,5 +26,5 @@ assign OUT_FE_PC_MUX = WB_V && WB_PC_MUX;
 //Stores to the register file
 assign OUT_DE_REG_WEN = (`WB_Cst_Reg_Wen) && WB_V;
 assign OUT_DE_DR = `DR;
-assign OUT_DE_Data = WB_RES;
+assign OUT_DE_Data = (`WB_Cst_W) ? {32'b0, WB_RES[31:0]} : WB_RES;
 endmodule
