@@ -1,6 +1,6 @@
 module writeback(
     input WB_V,
-    input [16:0] WB_Cst,
+    input [18:0] WB_Cst,
     input [63:0] WB_RES,
     input WB_PC_MUX,
     input [63:0] WB_NPC,
@@ -20,6 +20,7 @@ wire WB_ECALL;
 
 `define DR WB_IR[11:7]
 `define WB_Cst_Reg_Wen WB_Cst[0]
+`define WB_Cst_W WB_Cst[17]
 
 assign WB_DR = WB_IR[11:7];
 
@@ -53,4 +54,5 @@ trap_handler Thandler(
 );
 
 
+assign OUT_DE_Data = (`WB_Cst_W) ? {32'b0, WB_RES[31:0]} : WB_RES;
 endmodule

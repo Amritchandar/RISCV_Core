@@ -10,7 +10,7 @@ initial begin
     CLK <= 1'b1;
 end
 always @(posedge CLK)begin
-    out1 <= $signed(A) * $signed(B);
+    out1 <= $signed(A) + $signed(B);
     out2 <= ($signed(A) * $signed(B));
 end
 always begin
