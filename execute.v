@@ -38,7 +38,7 @@ assign EXE_Signed_Unsigned_MUL = $signed(EXE_ALU1) * $unsigned(EXE_ALU2);
 assign V_EXE_FE_BR_STALL = EXE_V && ((EXE_IR[6:2] ==5'b11000) || (EXE_IR[6:2] ==5'b11001) || (EXE_IR[6:2] ==5'b11011));
 
 always @(posedge CLK) begin
-    //Branch Comparisons/JMP
+    //Branch Comparisons and jump
     case (`EXE_Cst_CMP_JMP) 
         3'b00: begin
             //BEQ
