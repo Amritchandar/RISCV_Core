@@ -21,6 +21,8 @@ module  execute (
     output reg [63:0] MEM_NPC,
     output V_EXE_FE_BR_STALL,
     output V_EXE_FE_TRAP_STALL,
+    output reg [63:0] MEM_RFD,
+    output reg [63:0] MEM_CSRFD,
     output reg [63:0] MEM_Address,
     output [4:0] EXE_DR
 );
@@ -215,7 +217,7 @@ always @(posedge CLK) begin
         MEM_NPC <= EXE_NPC;
         MEM_IR <= EXE_IR;
         MEM_RFD <= EXE_RFD;
-        MEM_CSRD <= MEM_RFD;
+        MEM_CSRFD <= EXE_RFD;
     end
 end
 endmodule

@@ -1,4 +1,5 @@
 module writeback(
+    input CLK,
     input WB_V,
     input [18:0] WB_Cst,
     input [63:0] WB_RES,
@@ -8,6 +9,7 @@ module writeback(
     input [63:0] WB_RFD,
     input [31:0] WB_IR,
     input [63:0] WB_Target_Address,
+    input [1:0] DE_WB_PRIVILEGE,
     output [63:0] OUT_FE_Target_Address,
     output OUT_FE_PC_MUX,
     output OUT_DE_REG_WEN,
@@ -16,6 +18,7 @@ module writeback(
     output [63:0] OUT_DE_Data,
     output [63:0] OUT_DE_CSR_DATA,
     output [63:0] OUT_DE_CAUSE,
+    output OUT_DE_ST_CSR,
     output OUT_DE_CS,
     output [4:0] WB_DR
 );
@@ -36,24 +39,24 @@ assign OUT_FE_PC_MUX = WB_V && WB_PC_MUX;
 assign OUT_DE_REG_WEN = (`WB_Cst_Reg_Wen) && WB_V;
 assign OUT_DE_DR = `DR;
 assign OUT_DE_Data = (WB_IR[6:0] == 7'b1110011) ? WB_RFD:WB_RES;
+assign OUT_DE_ST_CSR = (WB_IR[6:0] == 7'b1110011) ? 1'b1 : 1'b0;
 assign OUT_DE_CSR_DATA = WB_CSRFD;
 
-assign OUT_DE_CAUSE = cause_temp;
-assign OUT_DE_CS = cs_temp;
 assign WB_ECALL = (WB_V && (WB_IR[27:0] == 28'h0000073)) ? 1'd1 : 1'd0;
+
 trap_handler Thandler(
     .CLK(CLK),
     .ECALL(WB_ECALL),
-    .F_IAM(0),
-    .F_IAF(0),
-    .F_II(0),
-    .MEM_LAM(0),
-    .MEM_LAF(0),
-    .MEM_SAM(0),
-    .MEM_SAF(0),
-    .TIMER(0),
-    .EXTERNAL(0),
-    .PRIVILEGE(PRIVILEGE),
+    .F_IAM(1'd0),
+    .F_IAF(1'd0),
+    .F_II(1'd0),
+    .MEM_LAM(1'd0),
+    .MEM_LAF(1'd0),
+    .MEM_SAM(1'd0),
+    .MEM_SAF(1'd0),
+    .TIMER(1'd0),
+    .EXTERNAL(1'd0),
+    .PRIVILEGE(DE_WB_PRIVILEGE),
     .CAUSE(OUT_DE_CAUSE),
     .CS(OUT_DE_CS)
 );

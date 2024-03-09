@@ -14,6 +14,7 @@ module decode_stage(
     input [63:0] OUT_DE_CAUSE,
     input        OUT_DE_CS,
     input        UART_INT, 
+    input        OUT_DE_ST_CSR,
     input DE_V, 
     input MEM_V,
     input WB_V,
@@ -25,14 +26,15 @@ module decode_stage(
     output reg [31:0] EXE_IR, // Output the instruction to the execute stage
     output reg stall,
     output reg [63:0] EXE_NPC,
+    output [1:0] DE_WB_PRIVILEGE,
     output reg [63:0] EXE_RFD,
     output reg [63:0] EXE_CSRFD,
     //output reg [1:0] EXE_TRAP, //signal propogated to writeback stage 
     output V_DE_FE_BR_STALL,
     output V_DE_FE_TRAP_STALL,
-    output [16:0] EXE_Cst
-    output reg [18:0] EXE_Cst
-
+    output reg [18:0] EXE_Cst,
+    output [63:0] DE_FE_MT_VEC,
+    output DE_FE_Context_Switch
 );
 `define DE_Cst_Unsigned control_signals[18]
 wire [18:0] control_signals;
@@ -51,7 +53,7 @@ wire [4:0] rd = DE_IR[11:7];
 reg [63:0] immediate; 
 wire [63:0] reg_file_out1; // rs1 content
 wire [63:0] reg_file_out2; // rs2 content
-
+wire [63:0] DE_rfd_latch;
 register_file register_file (
     .DR(OUT_DE_DR),
     .SR1(rs1),
@@ -70,15 +72,15 @@ csr_file csr(
     .SR(DE_IR[31:20]),
     .IR(DE_IR[31:0]),
     .DATA(OUT_DE_CSR_DATA),
-    .ST_REG(WB_ST_CSR),
-    .CS(WB_CS),
-    .CAUSE(WB_CAUSE),
+    .ST_REG(OUT_DE_ST_CSR),
+    .CS(OUT_DE_CS),
+    .CAUSE(OUT_DE_CAUSE),
     .DE_NPC(DE_NPC),
-    .OUT(exe_rfd_latch),
-    .PC_OUT(DE_MTVEC),
+    .OUT(DE_rfd_latch),
+    .PC_OUT(DE_FE_MT_VEC),
     .CLK(CLK),
-    .DE_CS(DE_CS),
-    .PRIVILEGE(PRIVILEGE)
+    .DE_CS(DE_FE_Context_Switch),
+    .PRIVILEGE(DE_WB_PRIVILEGE)
     );
 
 always @(*) begin
@@ -114,7 +116,7 @@ always @(posedge CLK) begin
                 // I-type (Immediate Instructions)
                 //SYSTEM
                 5'b11100: begin
-                    EXE_CSRFD <= exe_rfd_latch;
+                    EXE_CSRFD <= DE_rfd_latch;
                     EXE_RFD <= reg_file_out1;
                 end
 

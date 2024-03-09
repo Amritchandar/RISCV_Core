@@ -9,10 +9,11 @@ wire [31:0] DE_IR;
 wire DE_V;
 
 //Decode Stage
-wire [63:0] EXE_ALU1, EXE_ALU2, EXE_Target_Address, EXE_Address, EXE_NPC, EXE_CSRFD, EXE_RFD;
+wire [63:0] EXE_ALU1, EXE_ALU2, EXE_Target_Address, EXE_Address, EXE_NPC, EXE_CSRFD, EXE_RFD, DE_FE_MT_VEC;
 wire [31:0] EXE_IR;
 wire [18:0] EXE_Cst;
-wire EXE_V, V_DEP_STALL, V_DE_FE_BR_STALL, V_DE_FE_TRAP_STALL;
+wire [1:0] DE_WB_PRIVILEGE;
+wire EXE_V, V_DEP_STALL, V_DE_FE_BR_STALL, V_DE_FE_TRAP_STALL, DE_FE_Context_Switch;
 
 //Execute Stage
 wire [63:0] MEM_Target_Address, MEM_RES, MEM_NPC, MEM_Address, MEM_CSRFD, MEM_RFD;
@@ -29,10 +30,10 @@ wire [4:0] MEM_DR;
 wire V_MEM_FE_BR_STALL, V_MEM_FE_TRAP_STALL, WB_V, WB_PC_MUX;
 
 //Writeback Stage
-wire [63:0] OUT_FE_Target_Address, OUT_DE_Data,  OUT_DE_CSR_DATA;
+wire [63:0] OUT_FE_Target_Address, OUT_DE_Data,  OUT_DE_CSR_DATA, OUT_DE_CAUSE;
 wire [4:0] OUT_DE_DR, WB_DR;
 wire [31:0] OUT_DE_IR;
-wire OUT_FE_PC_MUX, OUT_DE_REG_WEN;
+wire OUT_FE_PC_MUX, OUT_DE_REG_WEN, OUT_DE_ST_CSR, OUT_DE_CS;
 
 fetch fetch_stage (
     .CLK(CLK), 
@@ -41,7 +42,9 @@ fetch fetch_stage (
     .DE_IR(DE_IR),
     .DE_V(DE_V),
     .OUT_FE_PC_MUX(OUT_FE_PC_MUX),
+    .DE_FE_MT_VEC(DE_FE_MT_VEC),
     .OUT_FE_Target_Address(OUT_FE_Target_Address),
+    .DE_FE_Context_Switch(DE_FE_Context_Switch),
     .V_DE_FE_BR_STALL(V_DE_FE_BR_STALL),
     .V_EXE_FE_BR_STALL(V_EXE_FE_BR_STALL),
     .V_MEM_FE_BR_STALL(V_MEM_FE_BR_STALL),
@@ -58,8 +61,13 @@ decode_stage decode_stage(
     .DE_IR(DE_IR),
     .DE_V(DE_V),
     .MEM_DR(MEM_DR),
+    .DE_FE_Context_Switch(DE_FE_Context_Switch),
     .EXE_DR(EXE_DR),
     .OUT_DE_IR(OUT_DE_IR),
+    .DE_FE_MT_VEC(DE_FE_MT_VEC),
+    .UART_INT(1'd0),
+    .DE_WB_PRIVILEGE(DE_WB_PRIVILEGE),
+    .OUT_DE_CAUSE(OUT_DE_CAUSE),
     .WB_DR(WB_DR),
     .MEM_V(MEM_V),
     .WB_V(WB_V),
@@ -73,13 +81,15 @@ decode_stage decode_stage(
     .TARGET_ADDRESS(EXE_Target_Address),
     .MEM_ADDRESS(EXE_Address),
     .EXE_Vout(EXE_V),
+    .OUT_DE_ST_CSR(OUT_DE_ST_CSR),
     .EXE_IR(EXE_IR),
     .EXE_NPC(EXE_NPC),
     .EXE_Cst(EXE_Cst),
     .stall(V_DEP_STALL),
     .OUT_DE_DR(OUT_DE_DR),
     .OUT_DE_Data(OUT_DE_Data),
-    .OUT_DE_REG_WEN(OUT_DE_REG_WEN)
+    .OUT_DE_REG_WEN(OUT_DE_REG_WEN),
+    .OUT_DE_CS(OUT_DE_CS)
 );
 
 execute execute_stage (
@@ -138,6 +148,7 @@ memory memory_stage (
 );
 
 writeback writeback_stage (
+    .CLK(CLK),
     .WB_V(WB_V),
     .WB_Cst(WB_Cst),
     .WB_RES(WB_RES),
@@ -153,6 +164,11 @@ writeback writeback_stage (
     .OUT_DE_IR(OUT_DE_IR),
     .OUT_DE_DR(OUT_DE_DR),
     .OUT_DE_Data(OUT_DE_Data),
-    .WB_DR(WB_DR)
+    .DE_WB_PRIVILEGE(DE_WB_PRIVILEGE),
+    .WB_DR(WB_DR),
+    .OUT_DE_ST_CSR(OUT_DE_ST_CSR),
+    .OUT_DE_CSR_DATA(OUT_DE_CSR_DATA),
+    .OUT_DE_CS(OUT_DE_CS),
+    .OUT_DE_CAUSE(OUT_DE_CAUSE)
 );
 endmodule

@@ -9,3 +9,5 @@
 ~/RISCV_Core/decode.v
 ~/RISCV_Core/tb_top.v
 ~/RISCV_Core/control_store.v
+~/RISCV_Core/csr_file.v
+~/RISCV_Core/trap_handler.v

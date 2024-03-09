@@ -10,6 +10,8 @@ module fetch (
     input V_EXE_FE_TRAP_STALL,
     input V_MEM_FE_TRAP_STALL,
     input V_DEP_STALL,
+    input [63:0] DE_FE_MT_VEC,
+    input DE_FE_Context_Switch,
     input CLK,
     input RESET,
     output reg [63:0] DE_NPC,
@@ -26,6 +28,8 @@ always @(posedge CLK) begin
     //Initial PC below
     if (RESET) begin
         FE_PC <= 'd0; 
+    end else if (DE_FE_Context_Switch) begin
+        FE_PC <= DE_FE_MT_VEC;
     end else if (!(V_DEP_STALL || V_DE_FE_BR_STALL || V_EXE_FE_BR_STALL ||V_MEM_FE_BR_STALL || V_DE_FE_TRAP_STALL || V_EXE_FE_TRAP_STALL ||V_MEM_FE_TRAP_STALL)) begin
         if (OUT_FE_PC_MUX) begin
             FE_PC <= OUT_FE_Target_Address;
@@ -39,7 +43,7 @@ always @(posedge CLK) begin
     end else if (!V_DEP_STALL) begin
         DE_NPC <= FE_PC + 64'd4;
         DE_IR <= FE_instruction;
-        DE_V <= !V_DE_FE_BR_STALL && !V_EXE_FE_BR_STALL && !V_MEM_FE_BR_STALL && V_DE_FE_TRAP_STALL && !V_EXE_FE_TRAP_STALL && !V_MEM_FE_TRAP_STALL;  
+        DE_V <= !V_DE_FE_BR_STALL && !V_EXE_FE_BR_STALL && !V_MEM_FE_BR_STALL && !V_DE_FE_TRAP_STALL && !V_EXE_FE_TRAP_STALL && !V_MEM_FE_TRAP_STALL;  
     end 
 end
 
