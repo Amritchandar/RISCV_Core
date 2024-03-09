@@ -1,6 +1,6 @@
 module writeback(
     input WB_V,
-    input [3:0] WB_Cst,
+    input [16:0] WB_Cst,
     input [63:0] WB_RES,
     input WB_PC_MUX,
     input [63:0] WB_NPC,

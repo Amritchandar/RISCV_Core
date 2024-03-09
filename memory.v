@@ -4,7 +4,7 @@ module memory(
     input RESET,
     input MEM_V,
     input [63:0] MEM_Target_Address,
-    input [3:0] MEM_Cst,
+    input [16:0] MEM_Cst,
     input [63:0] MEM_RES,
     input MEM_PC_MUX,
     input [63:0] MEM_NPC,
@@ -12,7 +12,7 @@ module memory(
     input [31:0] MEM_IR,
     output V_MEM_FE_BR_STALL,
     output reg WB_V,
-    output reg [3:0] WB_Cst,
+    output reg [16:0] WB_Cst,
     output reg [63:0] WB_RES,
     output reg WB_PC_MUX,
     output reg [63:0] WB_NPC,
@@ -21,9 +21,9 @@ module memory(
     output [4:0] MEM_DR
 );
 
-`define MEM_Cst_R_W MEM_Cst[0]
-`define MEM_Cst_Size MEM_Cst[1:0]
-`define MEM_Cst_RES_Mux MEM_Cst[0]
+`define MEM_Cst_R_W MEM_Cst[5]
+`define MEM_Cst_Size MEM_Cst[4:2]
+`define MEM_Cst_RES_Mux MEM_Cst[1]
 
 assign MEM_DR = MEM_IR[11:7];
 
@@ -41,9 +41,9 @@ always @(posedge CLK) begin
         WB_V <= MEM_V;
         WB_Cst <= MEM_Cst;
         if (`MEM_Cst_RES_Mux) begin
-            WB_RES <= MEM_RES;
-        end else begin
             WB_RES <= MEM_Data_Out;
+        end else begin
+            WB_RES <= MEM_RES;
         end
         WB_PC_MUX <= MEM_PC_MUX;
         WB_NPC <= MEM_NPC;

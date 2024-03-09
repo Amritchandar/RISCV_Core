@@ -21,12 +21,14 @@ module decode_stage(
     output reg stall,
     output reg [63:0] EXE_NPC,
     output V_DE_FE_BR_STALL,
-    output [3:0] EXE_Cst
+    output [16:0] EXE_Cst
 );
 
+wire [16:0] control_signals;
+control_store control_store (.address({DE_IR[6:0], DE_IR[14:12], DE_IR[30]}), .control_signals(control_signals));
 
 reg EXE_V;
-assign EXE_Cst = 4'b0;
+assign EXE_Cst = control_signals;
 assign EXE_Vout = EXE_V;
 assign V_DE_FE_BR_STALL = DE_V && ((DE_IR[6:2] ==5'b11000) || (DE_IR[6:2] ==5'b11001) || (DE_IR[6:2] ==5'b11011));
 
@@ -70,48 +72,46 @@ always @(posedge CLK) begin
             stall <= 1'b0;
             EXE_V <= DE_V;
             case (opcode)
-                    // I-type (Load instructions)
-                    7'b0000011: begin
-                        ALU1 <= reg_file_out1; // Base address
-                        ALU2 <= {{52{DE_IR[31]}}, DE_IR[31:20]}; // Offset
-                        MEM_ADDRESS <= reg_file_out1 + {{52{DE_IR[31]}}, DE_IR[31:20]}; // Address for load
-                    end
+                // I-type (Load instructions)
+                7'b0000011: begin
+                    ALU1 <= reg_file_out1; // Base address
+                    ALU2 <= {{52{DE_IR[31]}}, DE_IR[31:20]}; // Offset
+                    MEM_ADDRESS <= reg_file_out1 + {{52{DE_IR[31]}}, DE_IR[31:20]}; // Address for load
+                end
 
-                    // S-type (Store instructions)
-                    7'b0100011: begin
-                        ALU1 <= reg_file_out1; // Base address
-                        ALU2 <= reg_file_out2; // Value to store
-                        MEM_ADDRESS <= reg_file_out1 + {{52{DE_IR[31]}}, DE_IR[31:25], DE_IR[11:7]}; // Address for store
-                    end
+                // S-type (Store instructions)
+                7'b0100011: begin
+                    ALU1 <= reg_file_out1; // Base address
+                    ALU2 <= reg_file_out2; // Value to store
+                    MEM_ADDRESS <= reg_file_out1 + {{52{DE_IR[31]}}, DE_IR[31:25], DE_IR[11:7]}; // Address for store
+                end
 
-                    // R-type (ALU operations with two registers)
-                    7'b0110011: begin
-                        ALU1 <= reg_file_out1;
-                        ALU2 <= reg_file_out2;
-                    end
+                // R-type (ALU operations with two registers)
+                7'b0110011: begin
+                    ALU1 <= reg_file_out1;
+                    ALU2 <= reg_file_out2;
+                end
 
-                    // B-type (Branch instructions)
-                    7'b1100011: begin
-                        ALU1 <= reg_file_out1;
-                        ALU2 <= reg_file_out2;
-                        TARGET_ADDRESS <= DE_NPC + {{51{DE_IR[31]}}, DE_IR[31], DE_IR[7], DE_IR[30:25], DE_IR[11:8], 1'b0};
-                    end
+                // B-type (Branch instructions)
+                7'b1100011: begin
+                    ALU1 <= reg_file_out1;
+                    ALU2 <= reg_file_out2;
+                    TARGET_ADDRESS <= DE_NPC + {{51{DE_IR[31]}}, DE_IR[31], DE_IR[7], DE_IR[30:25], DE_IR[11:8], 1'b0};
+                end
 
-                    // U-type (Immediate instructions with upper 20 bits)
-                    7'b0110111, 7'b0010111: begin
-                        ALU1 <= {{32{DE_IR[31]}}, DE_IR[31:12], {12{1'b0}}};
-                        ALU2 <= 64'd0;
-                    end
+                // U-type (Immediate instructions with upper 20 bits)
+                7'b0110111, 7'b0010111: begin
+                    ALU1 <= {{32{DE_IR[31]}}, DE_IR[31:12], {12{1'b0}}};
+                    ALU2 <= 64'd0;
+                end
 
-                    // J-type (Jump instructions)
-                    7'b1101111: begin
-                        ALU1 <= DE_NPC;
-                        ALU2 <= {{44{DE_IR[31]}}, DE_IR[19:12], DE_IR[20], DE_IR[30:21], 1'b0};
-                        TARGET_ADDRESS <= DE_NPC + {{44{DE_IR[31]}}, DE_IR[19:12], DE_IR[20], DE_IR[30:21], 1'b0};
-                    end
-
-
-                endcase
+                // J-type (Jump instructions)
+                7'b1101111: begin
+                    ALU1 <= DE_NPC;
+                    ALU2 <= {{44{DE_IR[31]}}, DE_IR[19:12], DE_IR[20], DE_IR[30:21], 1'b0};
+                    TARGET_ADDRESS <= DE_NPC + {{44{DE_IR[31]}}, DE_IR[19:12], DE_IR[20], DE_IR[30:21], 1'b0};
+                end
+            endcase
         end
     end
 end

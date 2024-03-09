@@ -8,3 +8,4 @@
 ~/RISCV_Core/top.v
 ~/RISCV_Core/decode.v
 ~/RISCV_Core/tb_top.v
+~/RISCV_Core/control_store.v
