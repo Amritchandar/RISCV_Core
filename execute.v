@@ -6,13 +6,13 @@ module  execute (
     input [63:0] EXE_ALU1,
     input [63:0] EXE_ALU2,
     input [31:0] EXE_IR,
-    input [3:0] EXE_Cst,
+    input [16:0] EXE_Cst,
     input [63:0] EXE_NPC,
     input [63:0] EXE_Target_Address,
     input EXE_V,
     output reg MEM_V,
     output reg [63:0] MEM_Target_Address,
-    output reg [3:0] MEM_Cst,
+    output reg [16:0] MEM_Cst,
     output reg [63:0] MEM_RES,
     output reg MEM_PC_MUX,
     output reg [31:0] MEM_IR,
@@ -22,10 +22,10 @@ module  execute (
     output [4:0] EXE_DR
 );
 
-`define EXE_Cst_CMP EXE_Cst[2:0]
-`define EXE_Cst_ALU EXE_Cst[3:0]
-`define EXE_Cst_Res_Mux EXE_Cst[0]
-`define EXE_Cst_ALU_M EXE_Cst[2:0]
+`define EXE_Cst_CMP EXE_Cst[16:14]
+`define EXE_Cst_ALU EXE_Cst[13:10]
+`define EXE_Cst_Res_Mux EXE_Cst[9]
+`define EXE_Cst_ALU_M EXE_Cst[8:6]
 
 assign EXE_DR = EXE_IR[11:7];
 
@@ -81,7 +81,7 @@ always @(posedge CLK) begin
         end
         4'd2: begin
             //SLL
-            MEM_RES <= EXE_ALU1 << EXE_ALU2[4:0];
+            MEM_RES <= EXE_ALU1 << EXE_ALU2[5:0];
         end
         4'd3: begin
             //SLT
@@ -105,11 +105,11 @@ always @(posedge CLK) begin
         end
         4'd6: begin
             //SRL
-            MEM_RES <= EXE_ALU1 >> EXE_ALU2;
+            MEM_RES <= EXE_ALU1 >> EXE_ALU2[5:0];
         end
         4'd7: begin
             //SRA
-            MEM_RES <= EXE_ALU1 >>> EXE_ALU2;
+            MEM_RES <= EXE_ALU1 >>> EXE_ALU2[5:0];
         end
         4'd8: begin
             //OR
@@ -120,8 +120,16 @@ always @(posedge CLK) begin
             MEM_RES <= EXE_ALU1 & EXE_ALU2;
         end
         4'd10: begin
-            //PASSA
+            //LUI/SB/SH/SW/SD
             MEM_RES <= EXE_ALU1;
+        end
+        4'd11: begin
+            //AUIPC
+            MEM_RES <= $signed(EXE_ALU1) + $signed(EXE_NPC);
+        end
+        4'd12: begin
+            //JAL/JALR
+            MEM_RES <= EXE_NPC;
         end
         default: begin
             MEM_RES <= EXE_ALU1;
@@ -151,7 +159,7 @@ always @(posedge CLK) begin
             MEM_RES <= $signed(EXE_ALU1) / $signed(EXE_ALU2);
         end
         3'd5: begin
-            //DIV
+            //DIVU
             MEM_RES <= $unsigned(EXE_ALU1) / $unsigned(EXE_ALU2);
         end
         3'd6: begin
@@ -159,7 +167,7 @@ always @(posedge CLK) begin
             MEM_RES <= $signed(EXE_ALU1) % $signed(EXE_ALU2);
         end
         3'd7: begin
-            //REM
+            //REMU
             MEM_RES <= $unsigned(EXE_ALU1) % $unsigned(EXE_ALU2);
         end
         endcase
@@ -174,6 +182,7 @@ always @(posedge CLK) begin
         MEM_Address <= EXE_Address;
         MEM_V <= EXE_V;
         MEM_NPC <= EXE_NPC;
+        MEM_IR <= EXE_IR;
     end
 end
 endmodule

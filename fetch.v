@@ -6,6 +6,7 @@ module fetch (
     input V_DE_FE_BR_STALL,
     input V_EXE_FE_BR_STALL,
     input V_MEM_FE_BR_STALL,
+    input V_DEP_STALL,
     input CLK,
     input RESET,
     output reg [63:0] DE_NPC,
@@ -20,31 +21,22 @@ wire [31:0] FE_instruction;
 
 always @(posedge CLK) begin
     if (RESET) begin
-        FE_PC <= 'd0; //TODO: change this to inital PC  
-    end 
-    else if (!(V_DE_FE_BR_STALL || V_EXE_FE_BR_STALL || V_MEM_FE_BR_STALL)) begin
+        FE_PC <= 'd0; 
+    end else if (!(V_DEP_STALL || V_DE_FE_BR_STALL || V_EXE_FE_BR_STALL ||V_MEM_FE_BR_STALL)) begin
         if (OUT_FE_PC_MUX) begin
             FE_PC <= OUT_FE_Target_Address;
         end else begin
             FE_PC <= FE_PC + 64'd4;
-        end        
+        end
     end
 
-    if(RESET) begin
-        DE_NPC <= 'd0;
-        DE_IR <= 'd0;
-    end
-    else begin
+    if (RESET) begin
+        DE_V <= 1'b0;
+    end else if (!V_DEP_STALL) begin
         DE_NPC <= FE_PC + 64'd4;
         DE_IR <= FE_instruction;
-    end
-    
-    if (RESET) begin
-        DE_V <= 0;
-    end
-    else begin
-        DE_V <= !V_DE_FE_BR_STALL && !V_EXE_FE_BR_STALL && !V_MEM_FE_BR_STALL;
-    end
+        DE_V <= !V_DE_FE_BR_STALL && !V_EXE_FE_BR_STALL && !V_MEM_FE_BR_STALL;  
+    end 
 end
 
 instruction_cache a0 (.PC(FE_PC), .instruction(FE_instruction), .CLK(CLK), .RESET(RESET));

@@ -4,10 +4,10 @@ module memoryFile (
     input CLK,
     input RESET,
     input r_w,
-    input [1:0] size,
+    input [2:0] size,
     input [63:0] data_in,
     input [63:0] address,
-    output [63:0] data_out
+    output reg [63:0] data_out
 );
 // reg [63:12] cacheAddress;
 `define memSize 15
@@ -58,7 +58,24 @@ always @(posedge CLK) begin
     end
 end
 
-//Data output upon read
-assign data_out = ((r_w && MEM_V) == 1'b0) ? {memory[{address[3],3'b111}], memory[{address[3],3'b110}], memory[{address[3],3'b101}], memory[{address[3],3'b100}], memory[{address[3],3'b011}], memory[{address[3],3'b010}], memory[{address[3],3'b001}], memory[{address[3],3'b000}]}: 64'bz;;
+always @(*)begin
+    if (!r_w && MEM_V) begin
+        if (size == 3'd0) begin
+            data_out = {56'd0, memory[{address[3],3'b000}]};
+        end else if (size == 3'd1) begin
+            data_out = {48'd0, memory[{address[3],3'b001}], memory[{address[3],3'b000}]};
+        end else if (size == 3'd2) begin
+            data_out = {32'd0, memory[{address[3],3'b011}], memory[{address[3],3'b010}], memory[{address[3],3'b001}], memory[{address[3],3'b000}]};
+        end else if (size == 3'd3) begin
+            data_out = {48'd0, memory[{address[3],3'b001}], 8'd0}; 
+        end else if (size == 3'd4) begin
+            data_out = {32'd0, memory[{address[3],3'b011}], memory[{address[3],3'b010}], 16'd0};
+        end else if (size == 3'd5) begin
+            data_out = {memory[{address[3],3'b011}], memory[{address[3],3'b010}], memory[{address[3],3'b001}], memory[{address[3],3'b000}], 32'd0};
+        end else if (size == 3'd6) begin
+            data_out = {memory[{address[3],3'b111}], memory[{address[3],3'b110}], memory[{address[3],3'b101}], memory[{address[3],3'b100}], memory[{address[3],3'b011}], memory[{address[3],3'b010}], memory[{address[3],3'b001}], memory[{address[3],3'b000}]};
+        end
+    end
+end
 
 endmodule
