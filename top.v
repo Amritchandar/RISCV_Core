@@ -11,20 +11,20 @@ wire DE_V;
 //Decode Stage
 wire [63:0] EXE_ALU1, EXE_ALU2, EXE_Target_Address, EXE_Address, EXE_NPC;
 wire [31:0] EXE_IR;
-wire [16:0] EXE_Cst;
+wire [18:0] EXE_Cst;
 wire EXE_V, V_DEP_STALL, V_DE_FE_BR_STALL;
 
 //Execute Stage
 wire [63:0] MEM_Target_Address, MEM_RES, MEM_NPC, MEM_Address;
 wire [31:0] MEM_IR;
-wire [16:0] MEM_Cst;
+wire [18:0] MEM_Cst;
 wire [4:0] EXE_DR;
 wire MEM_V, MEM_PC_MUX, V_EXE_FE_BR_STALL;
 
 //Memory Stage
 wire [63:0] WB_RES, WB_NPC, WB_Target_Address;
 wire [31:0] WB_IR;
-wire [16:0] WB_Cst;
+wire [18:0] WB_Cst;
 wire [4:0] MEM_DR;
 wire V_MEM_FE_BR_STALL, WB_V, WB_PC_MUX;
 

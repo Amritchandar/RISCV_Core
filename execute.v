@@ -6,13 +6,13 @@ module  execute (
     input [63:0] EXE_ALU1,
     input [63:0] EXE_ALU2,
     input [31:0] EXE_IR,
-    input [16:0] EXE_Cst,
+    input [18:0] EXE_Cst,
     input [63:0] EXE_NPC,
     input [63:0] EXE_Target_Address,
     input EXE_V,
     output reg MEM_V,
     output reg [63:0] MEM_Target_Address,
-    output reg [16:0] MEM_Cst,
+    output reg [18:0] MEM_Cst,
     output reg [63:0] MEM_RES,
     output reg MEM_PC_MUX,
     output reg [31:0] MEM_IR,
@@ -22,10 +22,11 @@ module  execute (
     output [4:0] EXE_DR
 );
 
-`define EXE_Cst_CMP EXE_Cst[16:14]
+`define EXE_Cst_CMP_JMP EXE_Cst[16:14]
 `define EXE_Cst_ALU EXE_Cst[13:10]
 `define EXE_Cst_Res_Mux EXE_Cst[9]
 `define EXE_Cst_ALU_M EXE_Cst[8:6]
+`define EXE_Cst_W EXE_Cst[17]
 
 assign EXE_DR = EXE_IR[11:7];
 
@@ -37,39 +38,43 @@ assign EXE_Signed_Unsigned_MUL = $signed(EXE_ALU1) * $unsigned(EXE_ALU2);
 assign V_EXE_FE_BR_STALL = EXE_V && ((EXE_IR[6:2] ==5'b11000) || (EXE_IR[6:2] ==5'b11001) || (EXE_IR[6:2] ==5'b11011));
 
 always @(posedge CLK) begin
-    //Branch Comparisons
-    case (`EXE_Cst_CMP) 
-    3'b00: begin
-        //BEQ
-        MEM_PC_MUX <= ($signed(EXE_ALU1) == $signed(EXE_ALU2));
-    end
-    3'b001: begin
-        //BNE
-        MEM_PC_MUX <= ($signed(EXE_ALU1) != $signed(EXE_ALU2));
-    end
-    3'b010: begin
-        //BLT
-        MEM_PC_MUX <= ($signed(EXE_ALU1) < $signed(EXE_ALU2));
-    end
-    3'b011: begin
-        //BGE
-        MEM_PC_MUX <= ($signed(EXE_ALU1) >= $signed(EXE_ALU2));
-    end
-    3'b100: begin
-        //BLTU
-        MEM_PC_MUX <= ($unsigned(EXE_ALU1) < $unsigned(EXE_ALU2));
-    end
-    3'b101: begin
-        //BGEU
-        MEM_PC_MUX <= ($unsigned(EXE_ALU1) >= $unsigned(EXE_ALU2));
-    end
-    default: begin
-        MEM_PC_MUX <= 1'b0;
-    end
+    //Branch Comparisons/JMP
+    case (`EXE_Cst_CMP_JMP) 
+        3'b00: begin
+            //BEQ
+            MEM_PC_MUX <= ($signed(EXE_ALU1) == $signed(EXE_ALU2));
+        end
+        3'b001: begin
+            //BNE
+            MEM_PC_MUX <= ($signed(EXE_ALU1) != $signed(EXE_ALU2));
+        end
+        3'b010: begin
+            //BLT
+            MEM_PC_MUX <= ($signed(EXE_ALU1) < $signed(EXE_ALU2));
+        end
+        3'b011: begin
+            //BGE
+            MEM_PC_MUX <= ($signed(EXE_ALU1) >= $signed(EXE_ALU2));
+        end
+        3'b100: begin
+            //BLTU
+            MEM_PC_MUX <= ($unsigned(EXE_ALU1) < $unsigned(EXE_ALU2));
+        end
+        3'b101: begin
+            //BGEU
+            MEM_PC_MUX <= ($unsigned(EXE_ALU1) >= $unsigned(EXE_ALU2));
+        end
+        3'b110: begin
+            //JAL/JALR
+            MEM_PC_MUX <= 1'b1;
+        end
+        3'b111: begin
+            MEM_PC_MUX <= 1'b0;
+        end
     endcase
 
     //Arithmetic Operations
-    if (`EXE_Cst_Res_Mux) begin
+    if (!`EXE_Cst_Res_Mux) begin
         case (`EXE_Cst_ALU)
         4'd0: begin
             //ADD
@@ -129,7 +134,7 @@ always @(posedge CLK) begin
         end
         4'd12: begin
             //JAL/JALR
-            MEM_RES <= EXE_NPC;
+            MEM_RES <= EXE_ALU1;
         end
         default: begin
             MEM_RES <= EXE_ALU1;
@@ -156,19 +161,41 @@ always @(posedge CLK) begin
         end
         3'd4: begin
             //DIV
-            MEM_RES <= $signed(EXE_ALU1) / $signed(EXE_ALU2);
+            if ($signed(EXE_ALU2) == 0) begin
+                MEM_RES <= -64'd1;
+            end if (((EXE_ALU1 == 64'hFFFF8000) && `EXE_Cst_W) && (EXE_ALU2 == 64'hFFFFFFFF)) begin
+                MEM_RES <= 64'hFFFF8000;
+            end if (((EXE_ALU1 == 64'h80000000) && !`EXE_Cst_W) && (EXE_ALU2 == 64'hFFFFFFFF)) begin
+                MEM_RES <= 64'h80000000;
+            end else begin
+                MEM_RES <= $signed(EXE_ALU1) / $signed(EXE_ALU2);
+            end
         end
         3'd5: begin
             //DIVU
-            MEM_RES <= $unsigned(EXE_ALU1) / $unsigned(EXE_ALU2);
+            if ($signed(EXE_ALU2) == 0) begin
+                MEM_RES <= 64'hFFFFFFFF;
+            end else begin
+                MEM_RES <= $unsigned(EXE_ALU1) / $unsigned(EXE_ALU2);
+            end
         end
         3'd6: begin
             //REM
-            MEM_RES <= $signed(EXE_ALU1) % $signed(EXE_ALU2);
+            if ($signed(EXE_ALU2) == 0) begin
+                MEM_RES <= EXE_ALU1;
+            end if ((((EXE_ALU1 == 64'hFFFF8000) && `EXE_Cst_W) || ((EXE_ALU1 == 64'h80000000) && !`EXE_Cst_W)) && (EXE_ALU2 == 64'hFFFFFFFF)) begin
+                MEM_RES <= 64'b0;
+            end else begin
+                MEM_RES <= $signed(EXE_ALU1) % $signed(EXE_ALU2);
+            end
         end
         3'd7: begin
             //REMU
-            MEM_RES <= $unsigned(EXE_ALU1) % $unsigned(EXE_ALU2);
+            if ($signed(EXE_ALU2) == 0) begin
+                MEM_RES <= EXE_ALU1;
+            end else begin
+                MEM_RES <= $unsigned(EXE_ALU1) % $unsigned(EXE_ALU2);
+            end
         end
         endcase
     end
