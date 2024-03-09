@@ -52,6 +52,18 @@ register_file register_file (
     .CLK(CLK)
 );
 
+always @(*) begin
+    if (DE_V && EXE_V && ((EXE_DR == rs1) || (EXE_DR == rs2))) begin
+        stall <= 1'b1;
+    end else if (DE_V && MEM_V && ((MEM_DR == rs1) || (MEM_DR == rs2))) begin
+        stall <= 1'b1;
+    end else if (DE_V && WB_V && ((WB_DR == rs1) || (WB_DR == rs2))) begin
+        stall <= 1'b1;
+    end else begin
+        stall <= 1'b0;
+    end
+end
+
 always @(posedge CLK) begin
     if (RESET) begin
         EXE_V <= 1'b0;
@@ -60,23 +72,19 @@ always @(posedge CLK) begin
         EXE_NPC <= DE_NPC;
         EXE_IR <= DE_IR;
         if (DE_V && EXE_V && ((EXE_DR == rs1) || (EXE_DR == rs2))) begin
-            stall <= 1'b1;
             EXE_V <= 1'b0;
         end else if (DE_V && MEM_V && ((MEM_DR == rs1) || (MEM_DR == rs2))) begin
-            stall <= 1'b1;
             EXE_V <= 1'b0;
         end else if (DE_V && WB_V && ((WB_DR == rs1) || (WB_DR == rs2))) begin
-            stall <= 1'b1;
             EXE_V <= 1'b0;
         end else begin
-            stall <= 1'b0;
             EXE_V <= DE_V;
             case (opcode[6:2])
                 // I-type (Immediate Instructions)
                 //LOAD
                 5'b00000: begin
-                    ALU1 <= reg_file_out1; // Base address
-                    ALU2 <= {{52{DE_IR[31]}}, DE_IR[31:20]}; // Offset
+                    // ALU1 <= reg_file_out1; // Base address
+                    // ALU2 <= {{52{DE_IR[31]}}, DE_IR[31:20]}; // Offset
                     MEM_ADDRESS <= reg_file_out1 + {{52{DE_IR[31]}}, DE_IR[31:20]}; // Address for load
                 end
 

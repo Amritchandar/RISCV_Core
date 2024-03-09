@@ -20,6 +20,7 @@ reg [63:0] FE_PC;
 wire [31:0] FE_instruction;
 
 always @(posedge CLK) begin
+    //Initial PC below
     if (RESET) begin
         FE_PC <= 'd0; 
     end else if (!(V_DEP_STALL || V_DE_FE_BR_STALL || V_EXE_FE_BR_STALL ||V_MEM_FE_BR_STALL)) begin
