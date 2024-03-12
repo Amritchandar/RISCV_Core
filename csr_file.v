@@ -41,7 +41,7 @@ assign RET = {2'b0,PRIVILEGE,28'h0200073};
 always @(posedge CLK) begin
     if(CS)begin
         regFile[mcause] <= CAUSE;                                 //MCause register set
-        PC_OUT <= regFile[mtvec] + (4*(CAUSE[12:0]));             //trap address in vector table
+        PC_OUT <= regFile[mtvec] + (4*(CAUSE[3:0]));             //trap address in vector table
         regFile[mstatus][12:11] <= PRIVILEGE;                     //setting Mstatus.mpp
         regFile[mstatus]['h7] <= regFile[{mstatus}][PRIVILEGE]; //setting Mstatus.mpie to Mstatus.yie
         regFile[mstatus]['h3] <= 0;                              //setting Mstatus.mie to 0
@@ -56,6 +56,9 @@ always @(posedge CLK) begin
         PRIVILEGE <= RETURN_PRIVILEGE;                                                                      //reseting the privilige
         DE_CS <= 1;                                                                                                 
 
+    end
+    else begin
+        DE_CS <= 0;
     end
 
 end
@@ -73,7 +76,13 @@ always @(posedge CLK)begin
             if(i == misa)begin
                 regFile[misa] <= 64'h2000000002041100;
             end
-            regFile[i] <= 64'd0;
+            else if(i == mtvec)begin
+                regFile[mtvec] <= 64'h00000000000000AA;
+            end
+            else begin
+                regFile[i] <= 64'd0;
+            end
+            
         end 
     end
     else if(ST_REG)begin

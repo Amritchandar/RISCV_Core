@@ -12,6 +12,7 @@ module  execute (
     input [63:0] EXE_RFD,
     input [63:0] EXE_CSRFD,
     input EXE_V,
+    input DE_Context_Switch,
     output reg MEM_V,
     output reg [63:0] MEM_Target_Address,
     output reg [18:0] MEM_Cst,
@@ -41,7 +42,7 @@ assign EXE_Unsigned_MUL = $unsigned(EXE_ALU1) * $unsigned(EXE_ALU2);
 assign EXE_Signed_MUL = $signed(EXE_ALU1) * $signed(EXE_ALU2);
 assign EXE_Signed_Unsigned_MUL = $signed(EXE_ALU1) * $unsigned(EXE_ALU2);
 assign V_EXE_FE_BR_STALL = EXE_V && ((EXE_IR[6:2] ==5'b11000) || (EXE_IR[6:2] ==5'b11001) || (EXE_IR[6:2] ==5'b11011));
-assign V_EXE_FE_TRAP_STALL = (EXE_V && (EXE_IR[27:0] == 28'h0000073)) ? 1'd1 : 1'd0;
+assign V_EXE_FE_TRAP_STALL = (EXE_V && (EXE_IR[27:0] == 28'h0000073 && !DE_Context_Switch)) ? 1'd1 : 1'd0;
 
 always @(posedge CLK) begin
     //Branch Comparisons/JMP
@@ -213,7 +214,7 @@ always @(posedge CLK) begin
         MEM_Target_Address <= EXE_Target_Address;
         MEM_Cst <= EXE_Cst;
         MEM_Address <= EXE_Address;
-        MEM_V <= EXE_V;
+        MEM_V <= DE_Context_Switch ? 1'b0:EXE_V;
         MEM_NPC <= EXE_NPC;
         MEM_IR <= EXE_IR;
         MEM_RFD <= EXE_RFD;

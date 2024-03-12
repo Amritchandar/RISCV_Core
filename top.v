@@ -13,7 +13,7 @@ wire [63:0] EXE_ALU1, EXE_ALU2, EXE_Target_Address, EXE_Address, EXE_NPC, EXE_CS
 wire [31:0] EXE_IR;
 wire [18:0] EXE_Cst;
 wire [1:0] DE_WB_PRIVILEGE;
-wire EXE_V, V_DEP_STALL, V_DE_FE_BR_STALL, V_DE_FE_TRAP_STALL, DE_FE_Context_Switch;
+wire EXE_V, V_DEP_STALL, V_DE_FE_BR_STALL, V_DE_FE_TRAP_STALL, DE_Context_Switch;
 
 //Execute Stage
 wire [63:0] MEM_Target_Address, MEM_RES, MEM_NPC, MEM_Address, MEM_CSRFD, MEM_RFD;
@@ -44,7 +44,7 @@ fetch fetch_stage (
     .OUT_FE_PC_MUX(OUT_FE_PC_MUX),
     .DE_FE_MT_VEC(DE_FE_MT_VEC),
     .OUT_FE_Target_Address(OUT_FE_Target_Address),
-    .DE_FE_Context_Switch(DE_FE_Context_Switch),
+    .DE_Context_Switch(DE_Context_Switch),
     .V_DE_FE_BR_STALL(V_DE_FE_BR_STALL),
     .V_EXE_FE_BR_STALL(V_EXE_FE_BR_STALL),
     .V_MEM_FE_BR_STALL(V_MEM_FE_BR_STALL),
@@ -61,7 +61,7 @@ decode_stage decode_stage(
     .DE_IR(DE_IR),
     .DE_V(DE_V),
     .MEM_DR(MEM_DR),
-    .DE_FE_Context_Switch(DE_FE_Context_Switch),
+    .DE_Context_Switch(DE_Context_Switch),
     .EXE_DR(EXE_DR),
     .OUT_DE_IR(OUT_DE_IR),
     .DE_FE_MT_VEC(DE_FE_MT_VEC),
@@ -108,6 +108,7 @@ execute execute_stage (
     .EXE_Target_Address(EXE_Target_Address),
     .EXE_V(EXE_V),
     .MEM_V(MEM_V),
+    .DE_Context_Switch(DE_Context_Switch),
     .MEM_Target_Address(MEM_Target_Address),
     .MEM_Cst(MEM_Cst),
     .MEM_RES(MEM_RES),
@@ -138,6 +139,7 @@ memory memory_stage (
     .V_MEM_FE_BR_STALL(V_MEM_FE_BR_STALL),
     .V_MEM_FE_TRAP_STALL(V_MEM_FE_TRAP_STALL),
     .WB_V(WB_V),
+    .DE_Context_Switch(DE_Context_Switch),
     .WB_Cst(WB_Cst),
     .WB_RES(WB_RES),
     .WB_PC_MUX(WB_PC_MUX),

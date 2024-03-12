@@ -20,24 +20,30 @@ always @(posedge CLK) begin
             memory[i] = 'd0;
         end
 
-        $readmemh("instructions.txt", memory);
+        //$readmemh("instructions.txt", memory);
 
         //Add instructions at desired addresses
         //ADDI R1, R1, #5
-        // memory[0] <= 8'h93;
-        // memory[1] <= 8'h80;
-        // memory[2] <= 8'h50;
-        // memory[3] <= 8'h00;
-        // //LB R2, R1
-        // memory[4] <= 8'h3;
-        // memory[5] <= 8'h10;
-        // memory[6] <= 8'h22;
-        // memory[7] <= 8'h00;
-        //JAL R0, #-4
-        // memory[4] <= 8'h6F;
-        // memory[5] <= 8'hF0;
-        // memory[6] <= 8'hDF;
-        // memory[7] <= 8'hFF;
+        //  memory[0] <= 8'h93;
+        //  memory[1] <= 8'h80;
+        //  memory[2] <= 8'h50;
+        //  memory[3] <= 8'h00;
+        // // //LB R2, R1
+        //  memory[4] <= 8'h13;
+        //  memory[5] <= 8'h01;
+        //  memory[6] <= 8'h51;
+        //  memory[7] <= 8'h00;
+         
+        //  memory[8] <= 8'h73;
+        //  memory[9] <= 8'h00;
+        //  memory[10] <= 8'h00;
+        //  memory[11] <= 8'h00;
+
+        // //JAL R0, #-4
+        //  memory[12] <= 8'h6F;
+        //  memory[13] <= 8'hF0;
+        //  memory[14] <= 8'hDF;
+        //  memory[15] <= 8'hFF;
     end
 end
 // assign icache_r = (PC[63:12] == cacheAddress) ? 'd1 : 'd0;

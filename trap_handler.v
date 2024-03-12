@@ -51,7 +51,7 @@ always@(*)begin
     end
     else if(ECALL)begin
         CS = 1;
-        CAUSE = {1'b1,61'b0,PRIVILEGE};
+        CAUSE = {1'b1,59'b0,4'h8};
     end
     else if(TIMER)begin
         CS = 1;
