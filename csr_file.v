@@ -14,7 +14,8 @@ module csr_file(
     output reg DE_CS,
     input CLK,
     input RESET,
-    output reg [1:0] PRIVILEGE
+    output reg [1:0] PRIVILEGE,
+    output IE
 );
 
 parameter ustatus = 12'h000;
@@ -34,28 +35,32 @@ parameter mip = 12'h344;
 reg [63:0] regFile [4095:0];
 wire [1:0] RETURN_PRIVILEGE;
 wire [31:0] RET;
+wire        interrupt_enable;
 
-assign RETURN_PRIVILEGE = regFile[{2'b00,PRIVILEGE,8'h00}][12:11];  //status register contains return privilege
+assign RETURN_PRIVILEGE = PRIVILEGE == 2'b11 ? regFile[mstatus][12:11]:{1'b0,regFile[mstatus][8]};  //status register contains return privilege
 assign RET = {2'b0,PRIVILEGE,28'h0200073};
+assign interrupt_enable = regFile[mstatus][PRIVILEGE];
+assign IE = IR == RET ? 1:regFile[mstatus][PRIVILEGE];
 
 always @(posedge CLK) begin
     if(CS)begin
-        regFile[mcause] <= CAUSE;                                 //MCause register set
-        PC_OUT <= regFile[mtvec] + (4*(CAUSE[3:0]));             //trap address in vector table
-        regFile[mstatus][12:11] <= PRIVILEGE;                     //setting Mstatus.mpp
-        regFile[mstatus]['h7] <= regFile[{mstatus}][PRIVILEGE]; //setting Mstatus.mpie to Mstatus.yie
-        regFile[mstatus]['h3] <= 0;                              //setting Mstatus.mie to 0
-        regFile[mepc] <= DE_NPC;                                  //saving PC in MEPC
-        PRIVILEGE <= 2'b11;                                       //switching to machine mode
-        DE_CS <= 1;                                                                                                 
+        if(interrupt_enable)begin
+            regFile[mcause] <= CAUSE;                           //MCause register set
+            PC_OUT <= regFile[mtvec] + (4*(CAUSE[3:0]));        //trap address in vector table 
+            regFile[mstatus][12:11] <= PRIVILEGE;               //setting Mstatus.mpp
+            regFile[mstatus][7] <= regFile[mstatus][PRIVILEGE]; //setting Mstatus.mpie to Mstatus.yie
+            regFile[mstatus][3] <= 0;                           //setting Mstatus.mie to 0
+            regFile[mepc] <= DE_NPC;                            //saving PC in MEPC
+            PRIVILEGE <= 2'b11;                                 //switching to machine mode
+            DE_CS <= 1;
+        end                                                                                           
     end
     else if(IR == RET)begin
-        regFile[{2'b0,PRIVILEGE,8'h00}][RETURN_PRIVILEGE] <= regFile[{2'b0,PRIVILEGE,8'h00}][PRIVILEGE+4];  //setting _status.yie to _status.xpie
-        regFile[{2'b0,PRIVILEGE,8'h00}][PRIVILEGE+4] <= 1;                                                  //setting _status.xie to 1
-        PC_OUT <= regFile[{2'b0,PRIVILEGE,8'h41}];                                                          //outputting _epc
-        PRIVILEGE <= RETURN_PRIVILEGE;                                                                      //reseting the privilige
+        regFile[mstatus][RETURN_PRIVILEGE] <= regFile[mstatus][PRIVILEGE+4];  //setting mstatus.yie to mstatus.xpie
+        regFile[mstatus][PRIVILEGE+4] <= 1;                                   //setting mstatus.xpie to 1
+        PC_OUT <= regFile[mepc];                                             //outputting mepc
+        PRIVILEGE <= RETURN_PRIVILEGE;                                        //reseting the privilige
         DE_CS <= 1;                                                                                                 
-
     end
     else begin
         DE_CS <= 0;
@@ -77,7 +82,10 @@ always @(posedge CLK)begin
                 regFile[misa] <= 64'h2000000002041100;
             end
             else if(i == mtvec)begin
-                regFile[mtvec] <= 64'h00000000000000AA;
+                regFile[mtvec] <= 64'h0000000000000000;
+            end
+            else if(i == mstatus)begin
+                regFile[mstatus] <= 64'h0000000000000001;
             end
             else begin
                 regFile[i] <= 64'd0;

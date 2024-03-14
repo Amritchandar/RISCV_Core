@@ -13,7 +13,7 @@ wire [63:0] EXE_ALU1, EXE_ALU2, EXE_Target_Address, EXE_Address, EXE_NPC, EXE_CS
 wire [31:0] EXE_IR;
 wire [18:0] EXE_Cst;
 wire [1:0] DE_WB_PRIVILEGE;
-wire EXE_V, V_DEP_STALL, V_DE_FE_BR_STALL, V_DE_FE_TRAP_STALL, DE_Context_Switch;
+wire EXE_V, V_DEP_STALL, V_DE_FE_BR_STALL, V_DE_FE_TRAP_STALL, DE_Context_Switch, IE;
 
 //Execute Stage
 wire [63:0] MEM_Target_Address, MEM_RES, MEM_NPC, MEM_Address, MEM_CSRFD, MEM_RFD;
@@ -89,7 +89,8 @@ decode_stage decode_stage(
     .OUT_DE_DR(OUT_DE_DR),
     .OUT_DE_Data(OUT_DE_Data),
     .OUT_DE_REG_WEN(OUT_DE_REG_WEN),
-    .OUT_DE_CS(OUT_DE_CS)
+    .OUT_DE_CS(OUT_DE_CS),
+    .IE(IE)
 );
 
 execute execute_stage (
@@ -118,7 +119,8 @@ execute execute_stage (
     .V_EXE_FE_BR_STALL(V_EXE_FE_BR_STALL),
     .V_EXE_FE_TRAP_STALL(V_EXE_FE_TRAP_STALL),
     .MEM_Address(MEM_Address),
-    .EXE_DR(EXE_DR)
+    .EXE_DR(EXE_DR),
+    .IE(IE)
 );
 
 memory memory_stage (
@@ -146,7 +148,8 @@ memory memory_stage (
     .WB_NPC(WB_NPC),
     .WB_IR(WB_IR),
     .WB_Target_Address(WB_Target_Address),
-    .MEM_DR(MEM_DR)
+    .MEM_DR(MEM_DR),
+    .IE(IE)
 );
 
 writeback writeback_stage (

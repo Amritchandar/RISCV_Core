@@ -13,6 +13,7 @@ module memory(
     input [63:0] MEM_CSRFD,
     input [31:0] MEM_IR,
     input DE_Context_Switch,
+    input IE,
     output V_MEM_FE_BR_STALL,
     output V_MEM_FE_TRAP_STALL,
     output reg WB_V,
@@ -36,7 +37,7 @@ assign MEM_DR = MEM_IR[11:7];
 wire [63:0] MEM_Data_Out;
 //Stalls pipeline to allow accurate branches
 assign V_MEM_FE_BR_STALL = MEM_V && ((MEM_IR[6:2] ==5'b11000) || (MEM_IR[6:2] ==5'b11001) || (MEM_IR[6:2] ==5'b11011));
-assign V_MEM_FE_TRAP_STALL = (MEM_V && (MEM_IR[27:0] == 28'h0000073 && !DE_Context_Switch)) ? 1'd1 : 1'd0;
+assign V_MEM_FE_TRAP_STALL = (MEM_V && (MEM_IR[19:0] == 20'h00073 && !DE_Context_Switch && IE)) ? 1'd1 : 1'd0;
 
 //Memory File
 memoryFile x_mem_file (.MEM_V(MEM_V), .CLK(CLK), .RESET(RESET), .r_w(`MEM_Cst_R_W), .size(`MEM_Cst_Size), .data_in(MEM_RES), .address(MEM_Address), .data_out(MEM_Data_Out));

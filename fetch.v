@@ -27,7 +27,7 @@ wire [31:0] FE_instruction;
 always @(posedge CLK) begin
     //Initial PC below
     if (RESET) begin
-        FE_PC <= 'd0; 
+        FE_PC <= 'd512; 
     end else if (DE_Context_Switch) begin
         FE_PC <= DE_FE_MT_VEC;
     end else if (!(V_DEP_STALL || V_DE_FE_BR_STALL || V_EXE_FE_BR_STALL ||V_MEM_FE_BR_STALL || V_DE_FE_TRAP_STALL || V_EXE_FE_TRAP_STALL ||V_MEM_FE_TRAP_STALL)) begin

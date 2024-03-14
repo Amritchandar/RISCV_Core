@@ -34,7 +34,8 @@ module decode_stage(
     output V_DE_FE_TRAP_STALL,
     output reg [18:0] EXE_Cst,
     output [63:0] DE_FE_MT_VEC,
-    output DE_Context_Switch
+    output DE_Context_Switch,
+    output IE
 );
 `define DE_Cst_Unsigned control_signals[18]
 wire [18:0] control_signals;
@@ -43,8 +44,7 @@ control_store control_store (.address({DE_IR[6:0], DE_IR[14:12], DE_IR[30], DE_I
 reg EXE_V;
 assign EXE_Vout = EXE_V;
 assign V_DE_FE_BR_STALL = DE_V && ((DE_IR[6:2] ==5'b11000) || (DE_IR[6:2] ==5'b11001) || (DE_IR[6:2] ==5'b11011));
-assign V_DE_FE_TRAP_STALL = (DE_V && (DE_IR[27:0] == 28'h0000073 && !DE_Context_Switch)) ? 1'd1 : 1'd0;
-
+assign V_DE_FE_TRAP_STALL = (DE_V && (DE_IR[19:0] == 20'h00073 && !DE_Context_Switch && IE)) ? 1'd1 : 1'd0;
 wire [6:0] opcode = DE_IR[6:0];
 wire [4:0] rs1 = DE_IR[19:15];
 wire [4:0] rs2 = DE_IR[24:20];
@@ -80,15 +80,16 @@ csr_file csr(
     .PC_OUT(DE_FE_MT_VEC),
     .CLK(CLK),
     .DE_CS(DE_Context_Switch),
-    .PRIVILEGE(DE_WB_PRIVILEGE)
+    .PRIVILEGE(DE_WB_PRIVILEGE),
+    .IE(IE)
     );
 
 always @(*) begin
-    if (DE_V && EXE_V && ((EXE_DR == rs1) || (EXE_DR == rs2))) begin
+    if (DE_V && EXE_V && ((EXE_DR == rs1) || (EXE_DR == rs2)) && !DE_Context_Switch) begin
         stall <= 1'b1;
-    end else if (DE_V && MEM_V && ((MEM_DR == rs1) || (MEM_DR == rs2))) begin
+    end else if (DE_V && MEM_V && ((MEM_DR == rs1) || (MEM_DR == rs2)) && !DE_Context_Switch) begin
         stall <= 1'b1;
-    end else if (DE_V && WB_V && ((WB_DR == rs1) || (WB_DR == rs2))) begin
+    end else if (DE_V && WB_V && ((WB_DR == rs1) || (WB_DR == rs2)) && !DE_Context_Switch) begin
         stall <= 1'b1;
     end else begin
         stall <= 1'b0;
