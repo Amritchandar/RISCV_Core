@@ -13,14 +13,15 @@ module trap_handler(
     input         TIMER,
     input         EXTERNAL,
     input  [1:0]  PRIVILEGE,
-
+    input  [31:0] WB_IR,
+    input RET_INST,
     output reg [63:0] CAUSE,
     output reg       CS
     
 );
 
 
-always@(*)begin
+always@(posedge CLK)begin
     if(F_IAM)begin
         CS = 1;
         CAUSE = 0;
@@ -60,6 +61,9 @@ always@(*)begin
     else if(EXTERNAL)begin
         CS = 1;
         CAUSE = {1'b1,59'b0,PRIVILEGE+8};
+    end
+    else if(RET_INST)begin
+        CS = 1;
     end 
     else begin
         CS = 0;

@@ -46,21 +46,24 @@ always @(posedge CLK) begin
     if(CS)begin
         if(interrupt_enable)begin
             regFile[mcause] <= CAUSE;                           //MCause register set
-            PC_OUT <= regFile[mtvec] + (4*(CAUSE[3:0]));        //trap address in vector table 
+            PC_OUT <= regFile[mtvec] + (4*(0));        //trap address in vector table CAUSE[3:0]
             regFile[mstatus][12:11] <= PRIVILEGE;               //setting Mstatus.mpp
             regFile[mstatus][7] <= regFile[mstatus][PRIVILEGE]; //setting Mstatus.mpie to Mstatus.yie
             regFile[mstatus][3] <= 0;                           //setting Mstatus.mie to 0
             regFile[mepc] <= DE_NPC;                            //saving PC in MEPC
             PRIVILEGE <= 2'b11;                                 //switching to machine mode
             DE_CS <= 1;
+        end
+        else if(IR == RET)begin
+            regFile[mstatus][RETURN_PRIVILEGE] <= regFile[mstatus][PRIVILEGE+4];  //setting mstatus.yie to mstatus.xpie
+            regFile[mstatus][PRIVILEGE+4] <= 1;                                   //setting mstatus.xpie to 1
+            PC_OUT <= regFile[mepc];                                              //outputting mepc
+            PRIVILEGE <= RETURN_PRIVILEGE;                                        //reseting the privilige
+            DE_CS <= 1; 
+        end
+        else begin
+            DE_CS <= 0;
         end                                                                                           
-    end
-    else if(IR == RET)begin
-        regFile[mstatus][RETURN_PRIVILEGE] <= regFile[mstatus][PRIVILEGE+4];  //setting mstatus.yie to mstatus.xpie
-        regFile[mstatus][PRIVILEGE+4] <= 1;                                   //setting mstatus.xpie to 1
-        PC_OUT <= regFile[mepc];                                             //outputting mepc
-        PRIVILEGE <= RETURN_PRIVILEGE;                                        //reseting the privilige
-        DE_CS <= 1;                                                                                                 
     end
     else begin
         DE_CS <= 0;

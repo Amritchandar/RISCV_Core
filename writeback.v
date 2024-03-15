@@ -23,7 +23,7 @@ module writeback(
     output [4:0] WB_DR
 );
 
-wire WB_ECALL;
+wire WB_ECALL, RET_INST;
 
 `define DR WB_IR[11:7]
 `define WB_Cst_Reg_Wen WB_Cst[0]
@@ -43,6 +43,7 @@ assign OUT_DE_ST_CSR = (WB_IR[6:0] == 7'b1110011) ? 1'b1 : 1'b0;
 assign OUT_DE_CSR_DATA = WB_CSRFD;
 
 assign WB_ECALL = (WB_V && (WB_IR[27:0] == 28'h0000073)) ? 1'd1 : 1'd0;
+assign RET_INST =  (WB_V && (WB_IR == 32'h30200073 || WB_IR == 32'h10200073)) ? 1'b1: 1'b0;
 
 trap_handler Thandler(
     .CLK(CLK),
@@ -58,7 +59,9 @@ trap_handler Thandler(
     .EXTERNAL(1'd0),
     .PRIVILEGE(DE_WB_PRIVILEGE),
     .CAUSE(OUT_DE_CAUSE),
-    .CS(OUT_DE_CS)
+    .CS(OUT_DE_CS),
+    .RET_INST(RET_INST),
+    .WB_IR(WB_IR)
 );
 
 
