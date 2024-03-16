@@ -1,22 +1,20 @@
-//This file contains the machine vector table
-//
 
 
 .section .text
 .global m_vector_table
 
 m_vector_table:
-//exceptions
-                j IAM           //instruction address misaligned 
-                j IAF           //instruction access fault
-                j II            //illegal instruction
-                addi x0, x0, 0  //impliment breakpoint
-                j LAM           //load access misaligned
-                j LAF           //load access fault
-                j SAM           //store address misaligned
-                j SAF           //store access fault
-                j ECALL         //software machine ECALL
-//interrupts                
+#exceptions
+                j IAM           #instruction address misaligned 
+                j IAF           #instruction access fault
+                j II            #illegal instruction
+                addi x0, x0, 0  #impliment breakpoint
+                j LAM           #load access misaligned
+                j LAF           #load access fault
+                j SAM           #store address misaligned
+                j SAF           #store access fault
+                j ECALL         #software machine ECALL
+#interrupts                
                 addi x0, x0, 0        
                 addi x0, x0, 0         
                 addi x0, x0, 0          
@@ -25,69 +23,90 @@ m_vector_table:
                 addi x0, x0, 0         
                 addi x0, x0, 0         
                 addi x0, x0, 0         
-                j EXTERNAL      //external interrupt (UART)       
+                j EXTERNAL      #external interrupt (UART)       
 
+
+
+IAM:
+    addi x10, x10, 5
+IAF:
+    addi x10, x10, 5
+II:
+    addi x10, x10, 5
+LAM:
+    addi x10, x10, 5
+LAF:
+    addi x10, x10, 5
+SAM:
+    addi x10, x10, 5
+SAF:
+    addi x10, x10, 5
 ECALL:
                 
-                save_context
-                addi r10, r10, 5 
-                restore_context
+                jal ra, save_context
+                addi x10, x10, 5 
+                jal ra, restore_context
+EXTERNAL:
+	addi x10, x10, 5
 
-.macro save_context
 
-                sw x8, x2, 0
-                addi x2, x2, 4
-                sw x9, x2, 0
-                addi x2, x2, 4
-                sw x18, x2, 0
-                addi x2, x2, 4
-                sw x19, x2, 0
-                addi x2, x2, 4
-                sw x20, x2, 0
-                addi x2, x2, 4
-                sw x21, x2, 0
-                addi x2, x2, 4
-                sw x22, x2, 0
-                addi x2, x2, 4
-                sw x23, x2, 0
-                addi x2, x2, 4
-                sw x24, x2, 0
-                addi x2, x2, 4
-                sw x25, x2, 0
-                addi x2, x2, 4
-                sw x26, x2, 0
-                addi x2, x2, 4
-                sw x27, x2, 0
-                addi x2, x2, 4
+save_context:
 
-.endm
+                sw x8, 0(x2)
+                addi x2, x2, 8
+                sw x9, 0(x2)
+                addi x2, x2, 8
+                sw x18, 0(x2)
+                addi x2, x2, 8
+                sw x19, 0(x2)
+                addi x2, x2, 8
+                sw x20, 0(x2)
+                addi x2, x2, 8
+                sw x21, 0(x2)
+                addi x2, x2, 8
+                sw x22, 0(x2)
+                addi x2, x2, 8
+                sw x23, 0(x2)
+                addi x2, x2, 8
+                sw x24, 0(x2)
+                addi x2, x2, 8
+                sw x25, 0(x2)
+                addi x2, x2, 8
+                sw x26, 0(x2)
+                addi x2, x2, 8
+                sw x27, 0(x2)
+                addi x2, x2, 8
+                ret
 
-.macro restore_context
 
-                ldw x2, x27, 0
-                addi x2, x2, -4
-                ldw x2, x26, 0
-                addi x2, x2, -4
-                ldw x2, x25, 0
-                addi x2, x2, -4
-                ldw x2, x24, 0
-                addi x2, x2, -4
-                ldw x2, x23, 0
-                addi x2, x2, -4
-                ldw x2, x22, 0
-                addi x2, x2, -4
-                ldw x2, x21, 0
-                addi x2, x2, -4
-                ldw x2, x20, 0
-                addi x2, x2, -4
-                ldw x2, x19, 0
-                addi x2, x2, -4
-                ldw x2, x18, 0
-                addi x2, x2, -4
-                ldw x2, x9, 0
-                addi x2, x2, -4
-                ldw x2, x8, 0
-                addi x2, x2, -4
-.endm
+
+restore_context:
+
+                lw x27, 0(x2)
+                addi x2, x2, -8
+                lw x26, 0(x2)
+                addi x2, x2, -8
+                lw x25, 0(x2)
+                addi x2, x2, -8
+                lw x24, 0(x2)
+                addi x2, x2, -8
+                lw x23, 0(x2)
+                addi x2, x2, -8
+                lw x22, 0(x2)
+                addi x2, x2, -8
+                lw x21, 0(x2)
+                addi x2, x2, -8
+                lw x20, 0(x2)
+                addi x2, x2, -8
+                lw x19, 0(x2)
+                addi x2, x2, -8
+                lw x18, 0(x2)
+                addi x2, x2, -8
+                lw x9, 0(x2)
+                addi x2, x2, -8
+                lw x8, 0(x2)
+                addi x2, x2, -8
+                ret
+
 
 
