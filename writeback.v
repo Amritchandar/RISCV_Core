@@ -10,6 +10,7 @@ module writeback(
     input [31:0] WB_IR,
     input [63:0] WB_Target_Address,
     input [1:0] DE_WB_PRIVILEGE,
+    input FE_IAM,
     output [63:0] OUT_FE_Target_Address,
     output OUT_FE_PC_MUX,
     output OUT_DE_REG_WEN,
@@ -48,7 +49,7 @@ assign RET_INST =  (WB_V && (WB_IR == 32'h30200073 || WB_IR == 32'h10200073)) ? 
 trap_handler Thandler(
     .CLK(CLK),
     .ECALL(WB_ECALL),
-    .F_IAM(1'd0),
+    .F_IAM(FE_IAM),
     .F_IAF(1'd0),
     .F_II(1'd0),
     .MEM_LAM(1'd0),

@@ -3,10 +3,13 @@ module top(
     input RESET
 );
 
+
+
+
 //Fetch Stage
 wire [63:0] DE_NPC;
 wire [31:0] DE_IR;
-wire DE_V;
+wire DE_V,FE_IAM;
 
 //Decode Stage
 wire [63:0] EXE_ALU1, EXE_ALU2, EXE_Target_Address, EXE_Address, EXE_NPC, EXE_CSRFD, EXE_RFD, DE_FE_MT_VEC;
@@ -35,16 +38,22 @@ wire [4:0] OUT_DE_DR, WB_DR;
 wire [31:0] OUT_DE_IR;
 wire OUT_FE_PC_MUX, OUT_DE_REG_WEN, OUT_DE_ST_CSR, OUT_DE_CS;
 
+wire flush;
+
+assign flush = (DE_Context_Switch || FE_IAM);
+
+
 fetch fetch_stage (
     .CLK(CLK), 
     .RESET(RESET),
     .DE_NPC(DE_NPC),
     .DE_IR(DE_IR),
+    .FE_IAM(FE_IAM),
     .DE_V(DE_V),
     .OUT_FE_PC_MUX(OUT_FE_PC_MUX),
     .DE_FE_MT_VEC(DE_FE_MT_VEC),
     .OUT_FE_Target_Address(OUT_FE_Target_Address),
-    .DE_Context_Switch(DE_Context_Switch),
+    .DE_Context_Switch(flush),
     .V_DE_FE_BR_STALL(V_DE_FE_BR_STALL),
     .V_EXE_FE_BR_STALL(V_EXE_FE_BR_STALL),
     .V_MEM_FE_BR_STALL(V_MEM_FE_BR_STALL),
@@ -109,7 +118,7 @@ execute execute_stage (
     .EXE_Target_Address(EXE_Target_Address),
     .EXE_V(EXE_V),
     .MEM_V(MEM_V),
-    .DE_Context_Switch(DE_Context_Switch),
+    .DE_Context_Switch(flush),
     .MEM_Target_Address(MEM_Target_Address),
     .MEM_Cst(MEM_Cst),
     .MEM_RES(MEM_RES),
@@ -141,7 +150,7 @@ memory memory_stage (
     .V_MEM_FE_BR_STALL(V_MEM_FE_BR_STALL),
     .V_MEM_FE_TRAP_STALL(V_MEM_FE_TRAP_STALL),
     .WB_V(WB_V),
-    .DE_Context_Switch(DE_Context_Switch),
+    .DE_Context_Switch(flush),
     .WB_Cst(WB_Cst),
     .WB_RES(WB_RES),
     .WB_PC_MUX(WB_PC_MUX),
@@ -170,6 +179,7 @@ writeback writeback_stage (
     .OUT_DE_DR(OUT_DE_DR),
     .OUT_DE_Data(OUT_DE_Data),
     .DE_WB_PRIVILEGE(DE_WB_PRIVILEGE),
+    .FE_IAM(FE_IAM),
     .WB_DR(WB_DR),
     .OUT_DE_ST_CSR(OUT_DE_ST_CSR),
     .OUT_DE_CSR_DATA(OUT_DE_CSR_DATA),

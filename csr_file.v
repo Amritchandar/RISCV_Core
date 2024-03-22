@@ -46,7 +46,7 @@ always @(posedge CLK) begin
     if(CS)begin
         if(interrupt_enable)begin
             regFile[mcause] <= CAUSE;                           //MCause register set
-            PC_OUT <= regFile[mtvec] + (4*(CAUSE[3:0]));        //trap address in vector table 
+            PC_OUT <= regFile[mtvec] + (4*(0));        //trap address in vector table CAUSE[3:0]
             regFile[mstatus][12:11] <= PRIVILEGE;               //setting Mstatus.mpp
             regFile[mstatus][7] <= regFile[mstatus][PRIVILEGE]; //setting Mstatus.mpie to Mstatus.yie
             regFile[mstatus][3] <= 0;                           //setting Mstatus.mie to 0

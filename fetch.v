@@ -16,13 +16,15 @@ module fetch (
     input RESET,
     output reg [63:0] DE_NPC,
     output reg [31:0] DE_IR,
-    output reg DE_V
+    output reg DE_V,
+    output FE_IAM
 );
 
 `define fe_opcode DE_IR[6:0]
 `define fe_func3 DE_IR[14:12]
 reg [63:0] FE_PC;
 wire [31:0] FE_instruction;
+assign FE_IAM = ((FE_PC & 64'd3) == 0) ? 1'b0 : 1'b1;
 
 always @(posedge CLK) begin
     //Initial PC below
