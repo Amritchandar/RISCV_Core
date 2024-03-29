@@ -11,7 +11,8 @@ module writeback(
     output OUT_DE_REG_WEN,
     output [4:0] OUT_DE_DR,
     output [63:0] OUT_DE_Data,
-    output [4:0] WB_DR
+    output [4:0] WB_DR,
+    output V_OUT_FE_BR_STALL
 );
 `define DR WB_IR[11:7]
 `define WB_Cst_Reg_Wen WB_Cst[0]
@@ -27,4 +28,5 @@ assign OUT_FE_PC_MUX = WB_V && WB_PC_MUX;
 assign OUT_DE_REG_WEN = (`WB_Cst_Reg_Wen) && WB_V;
 assign OUT_DE_DR = `DR;
 assign OUT_DE_Data = (`WB_Cst_W) ? {32'b0, WB_RES[31:0]} : WB_RES;
+assign V_OUT_FE_BR_STALL = WB_V && ((WB_IR[6:2] ==5'b11000) || (WB_IR[6:2] ==5'b11001) || (WB_IR[6:2] ==5'b11011));
 endmodule

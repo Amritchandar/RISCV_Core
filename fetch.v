@@ -6,6 +6,7 @@ module fetch (
     input V_DE_FE_BR_STALL,
     input V_EXE_FE_BR_STALL,
     input V_MEM_FE_BR_STALL,
+    input V_OUT_FE_BR_STALL,
     input V_DEP_STALL,
     input CLK,
     input RESET,
@@ -38,7 +39,7 @@ always @(posedge CLK) begin
         DE_NPC <= FE_PC + 64'd4;
         DE_PC <= FE_PC;
         DE_IR <= FE_instruction;
-        DE_V <= !V_DE_FE_BR_STALL && !V_EXE_FE_BR_STALL && !V_MEM_FE_BR_STALL;  
+        DE_V <= !V_DE_FE_BR_STALL && !V_EXE_FE_BR_STALL && !V_MEM_FE_BR_STALL && !V_OUT_FE_BR_STALL;  
     end 
 end
 
