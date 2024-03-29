@@ -1,8 +1,16 @@
 module top(
     input CLK,
-    input RESET
+    input RESET,
+    input [31:0] MEM_Data_Out_i,
+    output MEM_V,
+    output MEM_Cst_R_W,
+    output [2:0] MEM_Cst_Size,
+    output [31:0] MEM_RES_o,
+    output [31:0] MEM_Address_o
 );
-
+assign MEM_Data_Out = {32'b0, MEM_Data_Out_i[31:0]};
+assign MEM_RES_o = MEM_RES[31:0];
+assign MEM_Address_o = MEM_Address[31:0];
 //Fetch Stage
 wire [63:0] DE_NPC;
 wire [63:0] DE_PC;
@@ -104,6 +112,7 @@ memory memory_stage (
     .CLK(CLK),
     .RESET(RESET),
     .MEM_V(MEM_V),
+    .MEM_Data_Out(MEM_Data_Out),
     .MEM_Target_Address(MEM_Target_Address),
     .MEM_Cst(MEM_Cst),
     .MEM_RES(MEM_RES),
@@ -119,7 +128,9 @@ memory memory_stage (
     .WB_NPC(WB_NPC),
     .WB_IR(WB_IR),
     .WB_Target_Address(WB_Target_Address),
-    .MEM_DR(MEM_DR)
+    .MEM_DR(MEM_DR),
+    .MEM_Cst_R_W(MEM_Cst_R_W),
+    .MEM_Cst_Size(MEM_Cst_Size)
 );
 
 writeback writeback_stage (
