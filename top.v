@@ -5,6 +5,7 @@ module top(
 
 //Fetch Stage
 wire [63:0] DE_NPC;
+wire [63:0] DE_PC;
 wire [31:0] DE_IR;
 wire DE_V;
 
@@ -39,6 +40,7 @@ fetch fetch_stage (
     .DE_NPC(DE_NPC),
     .DE_IR(DE_IR),
     .DE_V(DE_V),
+    .DE_PC(DE_PC),
     .OUT_FE_PC_MUX(OUT_FE_PC_MUX),
     .OUT_FE_Target_Address(OUT_FE_Target_Address),
     .V_DE_FE_BR_STALL(V_DE_FE_BR_STALL),

@@ -129,7 +129,7 @@ always @(posedge CLK) begin
                 5'b11000: begin
                     ALU1 <= reg_file_out1;
                     ALU2 <= reg_file_out2;
-                    TARGET_ADDRESS <= DE_NPC + {{51{DE_IR[31]}}, DE_IR[31], DE_IR[7], DE_IR[30:25], DE_IR[11:8], 1'b0};
+                    TARGET_ADDRESS <= DE_PC + {{51{DE_IR[31]}}, DE_IR[31], DE_IR[7], DE_IR[30:25], DE_IR[11:8], 1'b0};
                 end
 
                 // U-type (Immediate instructions with upper 20 bits)
@@ -144,7 +144,7 @@ always @(posedge CLK) begin
                 5'b11011: begin
                     ALU1 <= DE_NPC;
                     // ALU2 <= {{44{DE_IR[31]}}, DE_IR[19:12], DE_IR[20], DE_IR[30:21], 1'b0};
-                    TARGET_ADDRESS <= DE_NPC + {{44{DE_IR[31]}}, DE_IR[19:12], DE_IR[20], DE_IR[30:21], 1'b0};
+                    TARGET_ADDRESS <= DE_PC + {{44{DE_IR[31]}}, DE_IR[19:12], DE_IR[20], DE_IR[30:21], 1'b0};
                 end
 
                 // JALR

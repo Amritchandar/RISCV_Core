@@ -10,6 +10,7 @@ module fetch (
     input CLK,
     input RESET,
     output reg [63:0] DE_NPC,
+    output reg [63:0] DE_PC,
     output reg [31:0] DE_IR,
     output reg DE_V
 );
@@ -35,6 +36,7 @@ always @(posedge CLK) begin
         DE_V <= 1'b0;
     end else if (!V_DEP_STALL) begin
         DE_NPC <= FE_PC + 64'd4;
+        DE_PC <= FE_PC;
         DE_IR <= FE_instruction;
         DE_V <= !V_DE_FE_BR_STALL && !V_EXE_FE_BR_STALL && !V_MEM_FE_BR_STALL;  
     end 
