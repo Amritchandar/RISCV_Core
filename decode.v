@@ -2,6 +2,7 @@ module decode_stage(
     input CLK,
     input RESET,
     input [63:0] DE_NPC, // Program Counter
+    input [63:0] DE_PC,
     input [31:0] DE_IR, // Instruction 
     input [4:0] EXE_DR, // Destination register in EXE
     input [4:0] MEM_DR,

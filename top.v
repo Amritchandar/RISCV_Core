@@ -53,6 +53,7 @@ decode_stage decode_stage(
     .CLK(CLK),
     .RESET(RESET),
     .DE_NPC(DE_NPC),
+    .DE_PC(DE_PC),
     .DE_IR(DE_IR),
     .DE_V(DE_V),
     .MEM_DR(MEM_DR),
