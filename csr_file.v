@@ -14,7 +14,7 @@ module csr_file(
     output reg DE_CS,
     input CLK,
     input RESET,
-    output reg [1:0] PRIVILEGE,
+    output reg [1:0] PRIVILEGE, //current privilege mode
     output IE
 );
 
@@ -33,20 +33,20 @@ parameter mip = 12'h344;
 
 
 reg [63:0] regFile [4095:0];
-wire [1:0] RETURN_PRIVILEGE;
+wire [1:0] RETURN_PRIVILEGE;    
 wire [31:0] RET;
 wire        interrupt_enable;
 
 assign RETURN_PRIVILEGE = PRIVILEGE == 2'b11 ? regFile[mstatus][12:11]:{1'b0,regFile[mstatus][8]};  //status register contains return privilege
-assign RET = {2'b0,PRIVILEGE,28'h0200073};
-assign interrupt_enable = regFile[mstatus][PRIVILEGE];
+assign RET = {2'b0,PRIVILEGE,28'h0200073};                                                          //return instruction based on privilege
+assign interrupt_enable = regFile[mstatus][PRIVILEGE];                                              //global interrupts enabled
 assign IE = IR == RET ? 1:regFile[mstatus][PRIVILEGE];
- assign OUT = (RESET) ? 'd0: regFile[SR];
+assign OUT = (RESET) ? 'd0: regFile[SR];
 
 integer i;
 always @(posedge CLK) begin
     if(RESET)begin
-        PRIVILEGE <= 0;
+        PRIVILEGE <= 0; //user mode
         PC_OUT <= 0;
         DE_CS <= 0;
         
@@ -56,10 +56,10 @@ always @(posedge CLK) begin
                 regFile[misa] <= 64'h2000000002041100;
             end
             else if(i == mtvec)begin
-                regFile[mtvec] <= 64'h0000000000000000;
+                regFile[mtvec] <= 64'h0000000000000000;     //vector table located at mem 0x0
             end
             else if(i == mstatus)begin
-                regFile[mstatus] <= 64'h0000000000000001;
+                regFile[mstatus] <= 64'h0000000000000001;   //enable user interrupts
             end
             else begin
                 regFile[i] <= 64'd0;
@@ -70,7 +70,7 @@ always @(posedge CLK) begin
     else if(CS)begin
         if(interrupt_enable)begin
             regFile[mcause] <= CAUSE;                           //MCause register set
-            PC_OUT <= regFile[mtvec] + (4*(0));        //trap address in vector table CAUSE[3:0]
+            PC_OUT <= regFile[mtvec] + (4*(0));                 //trap address in vector table (replace 0 with CAUSE[3:0])
             regFile[mstatus][12:11] <= PRIVILEGE;               //setting Mstatus.mpp
             regFile[mstatus][7] <= regFile[mstatus][PRIVILEGE]; //setting Mstatus.mpie to Mstatus.yie
             regFile[mstatus][3] <= 0;                           //setting Mstatus.mie to 0
