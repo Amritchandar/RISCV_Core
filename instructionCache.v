@@ -20,7 +20,7 @@ always @(posedge CLK) begin
             memory[i] = 'd0;
         end
 
-        $readmemh("instructions.txt", memory);
+        $readmemh("instructions.mem", memory);
 
         //Add instructions at desired addresses
         //ADDI R1, R1, #5

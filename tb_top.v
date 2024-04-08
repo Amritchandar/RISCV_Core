@@ -1,14 +1,16 @@
 module tb_top();
-reg CLK, RESET;
+reg CLK, RESET, INTERRUPT;
 
 top top_level (
     .CLK(CLK),
-    .RESET(RESET)
+    .RESET(RESET),
+    .INTERRUPT(INTERRUPT)
 );
 
 initial begin
     RESET <= 1'b1;
     CLK <= 1'b1;
+    INTERRUPT <= 1'b0;
 
     #10
 

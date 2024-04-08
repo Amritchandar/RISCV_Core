@@ -1,38 +1,45 @@
 module top(
     input CLK,
-    input RESET
+    input RESET,
+    input INTERRUPT
 );
+
+wire flush;
 
 //Fetch Stage
 wire [63:0] DE_NPC;
 wire [63:0] DE_PC;
 wire [31:0] DE_IR;
-wire DE_V;
+wire DE_V,FE_IAM;
 
 //Decode Stage
-wire [63:0] EXE_ALU1, EXE_ALU2, EXE_Target_Address, EXE_Address, EXE_NPC;
+wire [63:0] EXE_ALU1, EXE_ALU2, EXE_Target_Address, EXE_Address, EXE_NPC, EXE_CSRFD, EXE_RFD, DE_FE_MT_VEC;
 wire [31:0] EXE_IR;
 wire [18:0] EXE_Cst;
-wire EXE_V, V_DEP_STALL, V_DE_FE_BR_STALL;
+wire [1:0] DE_WB_PRIVILEGE;
+wire EXE_V, V_DEP_STALL, V_DE_FE_BR_STALL, V_DE_FE_TRAP_STALL, DE_Context_Switch, IE;
 
 //Execute Stage
-wire [63:0] MEM_Target_Address, MEM_RES, MEM_NPC, MEM_Address;
+wire [63:0] MEM_Target_Address, MEM_RES, MEM_NPC, MEM_Address, MEM_CSRFD, MEM_RFD;
 wire [31:0] MEM_IR;
 wire [18:0] MEM_Cst;
 wire [4:0] EXE_DR;
-wire MEM_V, MEM_PC_MUX, V_EXE_FE_BR_STALL;
+wire MEM_V, MEM_PC_MUX, V_EXE_FE_BR_STALL, V_EXE_FE_TRAP_STALL;
 
 //Memory Stage
 wire [63:0] WB_RES, WB_NPC, WB_Target_Address;
 wire [31:0] WB_IR;
 wire [18:0] WB_Cst;
 wire [4:0] MEM_DR;
-wire V_MEM_FE_BR_STALL, WB_V, WB_PC_MUX;
+wire V_MEM_FE_BR_STALL, WB_V, WB_PC_MUX, V_MEM_FE_TRAP_STALL;
 
 //Writeback Stage
-wire [63:0] OUT_FE_Target_Address, OUT_DE_Data;
+wire [63:0] OUT_FE_Target_Address, OUT_DE_Data, OUT_DE_CSR_DATA, OUT_DE_CAUSE;
 wire [4:0] OUT_DE_DR, WB_DR;
-wire OUT_FE_PC_MUX, OUT_DE_REG_WEN, V_OUT_FE_BR_STALL;
+wire [31:0] OUT_DE_IR;
+wire OUT_FE_PC_MUX, OUT_DE_REG_WEN, V_OUT_FE_BR_STALL, OUT_DE_ST_CSR, OUT_DE_CS;
+
+assign flush = (DE_Context_Switch || FE_IAM);
 
 fetch fetch_stage (
     .CLK(CLK), 
@@ -47,7 +54,15 @@ fetch fetch_stage (
     .V_EXE_FE_BR_STALL(V_EXE_FE_BR_STALL),
     .V_MEM_FE_BR_STALL(V_MEM_FE_BR_STALL),
     .V_DEP_STALL(V_DEP_STALL),
-    .V_OUT_FE_BR_STALL(V_OUT_FE_BR_STALL)
+    .V_OUT_FE_BR_STALL(V_OUT_FE_BR_STALL),
+    .V_DE_FE_TRAP_STALL(V_DE_FE_TRAP_STALL),
+    .V_EXE_FE_TRAP_STALL(V_EXE_FE_TRAP_STALL),
+    .V_MEM_FE_TRAP_STALL(V_MEM_FE_TRAP_STALL),
+    .V_WB_FE_TRAP_STALL(V_WB_FE_TRAP_STALL),
+    .FE_IAM(FE_IAM),
+    .DE_Context_Switch(flush),
+    .OUT_DE_CS(OUT_DE_CS),
+    .DE_FE_MT_VEC(DE_FE_MT_VEC)
 );
 
 decode_stage decode_stage(
@@ -74,7 +89,19 @@ decode_stage decode_stage(
     .stall(V_DEP_STALL),
     .OUT_DE_DR(OUT_DE_DR),
     .OUT_DE_Data(OUT_DE_Data),
-    .OUT_DE_REG_WEN(OUT_DE_REG_WEN)
+    .OUT_DE_REG_WEN(OUT_DE_REG_WEN),
+    .DE_Context_Switch(DE_Context_Switch),
+    .OUT_DE_IR(OUT_DE_IR),
+    .DE_FE_MT_VEC(DE_FE_MT_VEC),
+    .DE_WB_PRIVILEGE(DE_WB_PRIVILEGE),
+    .OUT_DE_CAUSE(OUT_DE_CAUSE),
+    .EXE_CSRFD(EXE_CSRFD),
+    .EXE_RFD(EXE_RFD),
+    .OUT_DE_CSR_DATA(OUT_DE_CSR_DATA),
+    .V_DE_FE_TRAP_STALL(V_DE_FE_TRAP_STALL),
+    .OUT_DE_ST_CSR(OUT_DE_ST_CSR),
+    .OUT_DE_CS(OUT_DE_CS),
+    .IE(IE)
 );
 
 execute execute_stage (
@@ -97,7 +124,14 @@ execute execute_stage (
     .MEM_NPC(MEM_NPC),
     .V_EXE_FE_BR_STALL(V_EXE_FE_BR_STALL),
     .MEM_Address(MEM_Address),
-    .EXE_DR(EXE_DR)
+    .EXE_DR(EXE_DR),
+    .EXE_CSRFD(EXE_CSRFD),
+    .EXE_RFD(EXE_RFD),
+    .MEM_CSRFD(MEM_CSRFD),
+    .MEM_RFD(MEM_RFD),
+    .DE_Context_Switch(flush),
+    .V_EXE_FE_TRAP_STALL(V_EXE_FE_TRAP_STALL),
+    .IE(IE)
 );
 
 memory memory_stage (
@@ -112,6 +146,7 @@ memory memory_stage (
     .MEM_Address(MEM_Address),
     .MEM_IR(MEM_IR),
     .V_MEM_FE_BR_STALL(V_MEM_FE_BR_STALL),
+    .V_MEM_FE_TRAP_STALL(V_MEM_FE_TRAP_STALL),
     .WB_V(WB_V),
     .WB_Cst(WB_Cst),
     .WB_RES(WB_RES),
@@ -119,10 +154,12 @@ memory memory_stage (
     .WB_NPC(WB_NPC),
     .WB_IR(WB_IR),
     .WB_Target_Address(WB_Target_Address),
+    .DE_Context_Switch(flush),
     .MEM_DR(MEM_DR)
 );
 
 writeback writeback_stage (
+    .CLK(CLK),
     .WB_V(WB_V),
     .WB_Cst(WB_Cst),
     .WB_RES(WB_RES),
@@ -131,11 +168,13 @@ writeback writeback_stage (
     .WB_IR(WB_IR),
     .WB_Target_Address(WB_Target_Address),
     .OUT_FE_Target_Address(OUT_FE_Target_Address),
+    .V_WB_FE_TRAP_STALL(V_WB_FE_TRAP_STALL),
     .OUT_FE_PC_MUX(OUT_FE_PC_MUX),
     .OUT_DE_REG_WEN(OUT_DE_REG_WEN),
     .OUT_DE_DR(OUT_DE_DR),
     .OUT_DE_Data(OUT_DE_Data),
     .WB_DR(WB_DR),
-    .V_OUT_FE_BR_STALL(V_OUT_FE_BR_STALL)
+    .V_OUT_FE_BR_STALL(V_OUT_FE_BR_STALL),
+    .OUT_DE_CS(OUT_DE_CS)
 );
 endmodule

@@ -13,6 +13,13 @@ module decode_stage(
     input DE_V, 
     input MEM_V,
     input WB_V,
+
+    input [31:0] OUT_DE_IR,
+    input [63:0] OUT_DE_CSR_DATA,
+    input [63:0] OUT_DE_CAUSE,
+    input        OUT_DE_CS,
+    input        OUT_DE_ST_CSR,
+
     output reg [63:0] ALU1, // First ALU operand
     output reg [63:0] ALU2, // Second ALU operand
     output reg [63:0] TARGET_ADDRESS, // Offset for branch target
@@ -22,15 +29,25 @@ module decode_stage(
     output reg stall,
     output reg [63:0] EXE_NPC,
     output V_DE_FE_BR_STALL,
-    output reg [18:0] EXE_Cst
+    output reg [18:0] EXE_Cst,
+
+    output [1:0] DE_WB_PRIVILEGE,
+    output reg [63:0] EXE_RFD,
+    output reg [63:0] EXE_CSRFD,
+    output V_DE_FE_TRAP_STALL,
+    output [63:0] DE_FE_MT_VEC,
+    output DE_Context_Switch,
+    output IE
 );
 `define DE_Cst_Unsigned control_signals[18]
 wire [18:0] control_signals;
 control_store control_store (.address({DE_IR[6:0], DE_IR[14:12], DE_IR[30], DE_IR[25]}), .control_signals(control_signals));
 
 reg EXE_V;
+reg cut_trap;
 assign EXE_Vout = EXE_V;
 assign V_DE_FE_BR_STALL = DE_V && ((DE_IR[6:2] ==5'b11000) || (DE_IR[6:2] ==5'b11001) || (DE_IR[6:2] ==5'b11011));
+assign V_DE_FE_TRAP_STALL = (DE_V && DE_IR[19:0] == 20'h00073 && !DE_Context_Switch && IE && !cut_trap) ? 1'd1 : 1'd0;
 
 wire [6:0] opcode = DE_IR[6:0];
 wire [4:0] rs1 = DE_IR[19:15];
@@ -40,6 +57,7 @@ wire [4:0] rd = DE_IR[11:7];
 reg [63:0] immediate; 
 wire [63:0] reg_file_out1; // rs1 content
 wire [63:0] reg_file_out2; // rs2 content
+wire [63:0] DE_rfd_latch;
 
 register_file register_file (
     .DR(OUT_DE_DR),
@@ -53,12 +71,30 @@ register_file register_file (
     .CLK(CLK)
 );
 
+csr_file csr(
+    .RESET(RESET),
+    .DR(OUT_DE_IR[31:20]),
+    .SR(DE_IR[31:20]),
+    .IR(DE_IR[31:0]),
+    .DATA(OUT_DE_CSR_DATA),
+    .ST_REG(OUT_DE_ST_CSR),
+    .CS(OUT_DE_CS),
+    .CAUSE(OUT_DE_CAUSE),
+    .DE_NPC(DE_NPC),
+    .OUT(DE_rfd_latch),
+    .PC_OUT(DE_FE_MT_VEC),
+    .CLK(CLK),
+    .DE_CS(DE_Context_Switch),
+    .PRIVILEGE(DE_WB_PRIVILEGE),
+    .IE(IE)
+    );
+
 always @(*) begin
-    if (DE_V && EXE_V && ((EXE_DR == rs1) || (EXE_DR == rs2))) begin
+    if (DE_V && EXE_V && ((EXE_DR == rs1) || (EXE_DR == rs2)) && !DE_Context_Switch && !V_DE_FE_TRAP_STALL) begin
         stall <= 1'b1;
-    end else if (DE_V && MEM_V && ((MEM_DR == rs1) || (MEM_DR == rs2))) begin
+    end else if (DE_V && MEM_V && ((MEM_DR == rs1) || (MEM_DR == rs2)) && !DE_Context_Switch && !V_DE_FE_TRAP_STALL) begin
         stall <= 1'b1;
-    end else if (DE_V && WB_V && ((WB_DR == rs1) || (WB_DR == rs2))) begin
+    end else if (DE_V && WB_V && ((WB_DR == rs1) || (WB_DR == rs2)) && !DE_Context_Switch && !V_DE_FE_TRAP_STALL) begin
         stall <= 1'b1;
     end else begin
         stall <= 1'b0;
@@ -68,19 +104,33 @@ end
 always @(posedge CLK) begin
     if (RESET) begin
         EXE_V <= 1'b0;
+        cut_trap <= 1'b0;
     end else begin
+        if(V_DE_FE_TRAP_STALL)begin
+            cut_trap <= 1'b1;
+        end
+        if(DE_Context_Switch)begin
+            cut_trap <= 1'b0;
+        end
         EXE_Cst <= control_signals;
         EXE_NPC <= DE_NPC;
         EXE_IR <= DE_IR;
-        if (DE_V && EXE_V && ((EXE_DR == rs1) || (EXE_DR == rs2))) begin
+        if (DE_V && EXE_V && ((EXE_DR == rs1) || (EXE_DR == rs2)) && DE_IR[19:0] != 20'h00073) begin
             EXE_V <= 1'b0;
-        end else if (DE_V && MEM_V && ((MEM_DR == rs1) || (MEM_DR == rs2))) begin
+        end else if (DE_V && MEM_V && ((MEM_DR == rs1) || (MEM_DR == rs2)) && DE_IR[19:0] != 20'h00073) begin
             EXE_V <= 1'b0;
-        end else if (DE_V && WB_V && ((WB_DR == rs1) || (WB_DR == rs2))) begin
+        end else if (DE_V && WB_V && ((WB_DR == rs1) || (WB_DR == rs2)) && DE_IR[19:0] != 20'h00073) begin
+            EXE_V <= 1'b0;
+        end else if (DE_Context_Switch)begin
             EXE_V <= 1'b0;
         end else begin
             EXE_V <= DE_V;
             case (opcode[6:2])
+
+                5'b11100: begin
+                    EXE_CSRFD <= DE_rfd_latch;
+                    EXE_RFD <= reg_file_out1;
+                end
                 // I-type (Immediate Instructions)
                 //LOAD
                 5'b00000: begin
