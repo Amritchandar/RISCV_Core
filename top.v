@@ -10,7 +10,7 @@ wire flush;
 wire [63:0] DE_NPC;
 wire [63:0] DE_PC;
 wire [31:0] DE_IR;
-wire DE_V,FE_IAM;
+wire DE_V,FE_IAM,FE_II;
 
 //Decode Stage
 wire [63:0] EXE_ALU1, EXE_ALU2, EXE_Target_Address, EXE_Address, EXE_NPC, EXE_CSRFD, EXE_RFD, DE_FE_MT_VEC;
@@ -34,12 +34,12 @@ wire [4:0] MEM_DR;
 wire V_MEM_FE_BR_STALL, WB_V, WB_PC_MUX, V_MEM_FE_TRAP_STALL;
 
 //Writeback Stage
-wire [63:0] OUT_FE_Target_Address, OUT_DE_Data, OUT_DE_CSR_DATA, OUT_DE_CAUSE;
+wire [63:0] OUT_FE_Target_Address, OUT_DE_Data, OUT_DE_CSR_DATA, OUT_DE_CAUSE, OUT_DE_WB_PC;
 wire [4:0] OUT_DE_DR, WB_DR;
 wire [31:0] OUT_DE_IR;
 wire OUT_FE_PC_MUX, OUT_DE_REG_WEN, V_OUT_FE_BR_STALL, OUT_DE_ST_CSR, OUT_DE_CS;
 
-assign flush = (DE_Context_Switch || FE_IAM);
+assign flush = (DE_Context_Switch || FE_IAM || FE_II);
 
 fetch fetch_stage (
     .CLK(CLK), 
@@ -60,6 +60,7 @@ fetch fetch_stage (
     .V_MEM_FE_TRAP_STALL(V_MEM_FE_TRAP_STALL),
     .V_WB_FE_TRAP_STALL(V_WB_FE_TRAP_STALL),
     .FE_IAM(FE_IAM),
+    .FE_II(FE_II),
     .DE_Context_Switch(flush),
     .OUT_DE_CS(OUT_DE_CS),
     .DE_FE_MT_VEC(DE_FE_MT_VEC)
@@ -101,7 +102,8 @@ decode_stage decode_stage(
     .V_DE_FE_TRAP_STALL(V_DE_FE_TRAP_STALL),
     .OUT_DE_ST_CSR(OUT_DE_ST_CSR),
     .OUT_DE_CS(OUT_DE_CS),
-    .IE(IE)
+    .IE(IE),
+    .OUT_DE_WB_PC(OUT_DE_WB_PC)
 );
 
 execute execute_stage (
@@ -175,6 +177,13 @@ writeback writeback_stage (
     .OUT_DE_Data(OUT_DE_Data),
     .WB_DR(WB_DR),
     .V_OUT_FE_BR_STALL(V_OUT_FE_BR_STALL),
-    .OUT_DE_CS(OUT_DE_CS)
+    .OUT_DE_CS(OUT_DE_CS),
+    .OUT_DE_CAUSE(OUT_DE_CAUSE),
+    .FE_IAM(FE_IAM),
+    .FE_II(FE_II),
+    .UART(INTERRUPT),
+    .OUT_DE_WB_PC(OUT_DE_WB_PC),
+    .OUT_DE_IR(OUT_DE_IR),
+    .DE_WB_PRIVILEGE(DE_WB_PRIVILEGE)
 );
 endmodule

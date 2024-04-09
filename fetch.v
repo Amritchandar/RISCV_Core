@@ -24,7 +24,8 @@ module fetch (
     output reg [31:0] DE_IR,
     output reg DE_V,
 
-    output FE_IAM
+    output FE_IAM,
+    output FE_II
 );
 
 `define fe_opcode DE_IR[6:0]
@@ -33,6 +34,8 @@ reg [63:0] FE_PC;
 wire [31:0] FE_instruction;
 
 assign FE_IAM = ((FE_PC & 64'd3) == 0) ? 1'b0 : 1'b1; //instruction address misaligned
+//assign FE_II = ((`fe_opcode == 7'b0110111) || (`fe_opcode == 7'b0010111) || (`fe_opcode == 7'b1101111) || ((`fe_opcode == 7'b1100111) && (`fe_func3 == 3'b000)) || (`fe_opcode == 7'b1100011) || ((`fe_opcode == 7'b0000011) && (`fe_func3 != 3'b111)) || ((`fe_opcode == 7'b0100011) && (DE_IR[14] == 1'b0)) || (`fe_opcode == 7'b0010011) || (`fe_opcode == 7'b0110011) || (`fe_opcode == 7'b0001111) || (`fe_opcode == 7'b1110011) || ((`fe_opcode == 7'b0011011) && ((`fe_func3 == 3'b001) || (`fe_func3 == 3'b101) || (`fe_func3 == 3'b000))) || ((`fe_opcode == 7'b0111011) && ((`fe_func3 == 3'b001) || (`fe_func3 == 3'b101) || (`fe_func3 == 3'b000))) || (`fe_opcode == 7'b1110011) || (`fe_opcode == 7'b0110011) || (`fe_opcode == 7'b0111011)) ? 1'b0 : 1'b1;
+assign FE_II = 1'b0;
 
 always @(posedge CLK) begin
     //Initial PC below
@@ -55,9 +58,9 @@ always @(posedge CLK) begin
         DE_PC <= FE_PC;
         DE_IR <= FE_instruction;
         DE_V <= !V_DE_FE_BR_STALL && !V_EXE_FE_BR_STALL && !V_MEM_FE_BR_STALL && !V_OUT_FE_BR_STALL;  
-    end else if(V_DE_FE_TRAP_STALL || OUT_DE_CS || FE_IAM)begin
+    end else if(V_DE_FE_TRAP_STALL || OUT_DE_CS || FE_IAM || FE_II)begin
         DE_V <= 1'b0;
-    end else if(V_DE_FE_TRAP_STALL || OUT_DE_CS || FE_IAM)begin
+    end else if(V_DE_FE_TRAP_STALL || OUT_DE_CS || FE_IAM || FE_II)begin
         DE_V <= 1'b0;
     end
 end

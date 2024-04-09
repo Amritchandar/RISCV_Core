@@ -13,6 +13,7 @@ module writeback(
     input [1:0] DE_WB_PRIVILEGE,
     input UART,
     input FE_IAM,
+    input FE_II,
 
     output [63:0] OUT_FE_Target_Address,
     output OUT_FE_PC_MUX,
@@ -27,7 +28,8 @@ module writeback(
     output [63:0] OUT_DE_CAUSE,
     output OUT_DE_ST_CSR,
     output OUT_DE_CS,
-    output V_WB_FE_TRAP_STALL
+    output V_WB_FE_TRAP_STALL,
+    output [63:0] OUT_DE_WB_PC
 );
 `define DR WB_IR[11:7]
 `define WB_Cst_Reg_Wen WB_Cst[0]
@@ -40,6 +42,7 @@ assign OUT_DE_IR = WB_IR;
 //Chooses the correct next PC
 assign OUT_FE_Target_Address = WB_Target_Address;
 assign OUT_FE_PC_MUX = WB_V && WB_PC_MUX;
+assign OUT_DE_WB_PC = WB_NPC;
 
 //Stores to the register file
 assign OUT_DE_REG_WEN = (`WB_Cst_Reg_Wen) && WB_V;
@@ -57,7 +60,7 @@ trap_handler Thandler(
     .ECALL(WB_ECALL),
     .F_IAM(FE_IAM),
     .F_IAF(1'd0),
-    .F_II(1'd0),
+    .F_II(F_II),
     .MEM_LAM(1'd0),
     .MEM_LAF(1'd0),
     .MEM_SAM(1'd0),
@@ -67,7 +70,6 @@ trap_handler Thandler(
     .PRIVILEGE(DE_WB_PRIVILEGE),
     .CAUSE(OUT_DE_CAUSE),
     .CS(OUT_DE_CS),
-    .RET_INST(RET_INST),
-    .WB_IR(WB_IR)
+    .RET_INST(RET_INST)
 );
 endmodule

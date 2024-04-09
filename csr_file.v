@@ -8,7 +8,7 @@ module csr_file(
     input ST_REG,               //stores data to csr file when high
     input CS,                   //signals when a context switch occurs
     input [63:0] CAUSE,         //cause of interrupt/exception
-    input [63:0] DE_NPC,
+    input [63:0] SAVE_PC,
     output [63:0] OUT,
     output reg [63:0] PC_OUT,
     output reg DE_CS,
@@ -74,7 +74,7 @@ always @(posedge CLK) begin
             regFile[mstatus][12:11] <= PRIVILEGE;               //setting Mstatus.mpp
             regFile[mstatus][7] <= regFile[mstatus][PRIVILEGE]; //setting Mstatus.mpie to Mstatus.yie
             regFile[mstatus][3] <= 0;                           //setting Mstatus.mie to 0
-            regFile[mepc] <= DE_NPC;                            //saving PC in MEPC
+            regFile[mepc] <= SAVE_PC;                            //saving PC in MEPC
             PRIVILEGE <= 2'b11;                                 //switching to machine mode
             DE_CS <= 1;
         end

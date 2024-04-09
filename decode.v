@@ -19,6 +19,7 @@ module decode_stage(
     input [63:0] OUT_DE_CAUSE,
     input        OUT_DE_CS,
     input        OUT_DE_ST_CSR,
+    input [63:0] OUT_DE_WB_PC,
 
     output reg [63:0] ALU1, // First ALU operand
     output reg [63:0] ALU2, // Second ALU operand
@@ -53,6 +54,7 @@ wire [6:0] opcode = DE_IR[6:0];
 wire [4:0] rs1 = DE_IR[19:15];
 wire [4:0] rs2 = DE_IR[24:20];
 wire [4:0] rd = DE_IR[11:7];
+wire [63:0] SAVE_PC = OUT_DE_CAUSE[63] ? DE_NPC:OUT_DE_WB_PC;
 
 reg [63:0] immediate; 
 wire [63:0] reg_file_out1; // rs1 content
@@ -80,7 +82,7 @@ csr_file csr(
     .ST_REG(OUT_DE_ST_CSR),
     .CS(OUT_DE_CS),
     .CAUSE(OUT_DE_CAUSE),
-    .DE_NPC(DE_NPC),
+    .SAVE_PC(SAVE_PC),
     .OUT(DE_rfd_latch),
     .PC_OUT(DE_FE_MT_VEC),
     .CLK(CLK),
