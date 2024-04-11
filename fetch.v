@@ -28,9 +28,7 @@ always @(posedge CLK) begin
     end else if (!(V_DEP_STALL || V_DE_FE_BR_STALL || V_EXE_FE_BR_STALL ||V_MEM_FE_BR_STALL)) begin
         if (OUT_FE_PC_MUX) begin
             FE_PC <= OUT_FE_Target_Address;
-        end else if (V_OUT_FE_BR_STALL) begin
-            FE_PC <= FE_PC;
-        end else begin
+        end else if (!V_OUT_FE_BR_STALL) begin
             FE_PC <= FE_PC + 64'd4;
         end
     end
