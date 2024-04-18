@@ -34,7 +34,7 @@ wire [4:0] MEM_DR;
 wire V_MEM_FE_BR_STALL, WB_V, WB_PC_MUX, V_MEM_FE_TRAP_STALL;
 
 //Writeback Stage
-wire [63:0] OUT_FE_Target_Address, OUT_DE_Data, OUT_DE_CSR_DATA, OUT_DE_CAUSE, OUT_DE_WB_PC;
+wire [63:0] OUT_FE_Target_Address, OUT_DE_Data, OUT_DE_CSR_DATA, OUT_DE_CAUSE, OUT_DE_WB_PC, WB_CSRFD, WB_RFD;
 wire [4:0] OUT_DE_DR, WB_DR;
 wire [31:0] OUT_DE_IR;
 wire OUT_FE_PC_MUX, OUT_DE_REG_WEN, V_OUT_FE_BR_STALL, OUT_DE_ST_CSR, OUT_DE_CS;
@@ -157,7 +157,12 @@ memory memory_stage (
     .WB_IR(WB_IR),
     .WB_Target_Address(WB_Target_Address),
     .DE_Context_Switch(flush),
-    .MEM_DR(MEM_DR)
+    .MEM_DR(MEM_DR),
+    .MEM_RFD(MEM_RFD),
+    .MEM_CSRFD(MEM_CSRFD),
+    .WB_RFD(WB_RFD),
+    .WB_CSRFD(WB_CSRFD),
+    .IE(IE)
 );
 
 writeback writeback_stage (
@@ -184,6 +189,10 @@ writeback writeback_stage (
     .UART(INTERRUPT),
     .OUT_DE_WB_PC(OUT_DE_WB_PC),
     .OUT_DE_IR(OUT_DE_IR),
-    .DE_WB_PRIVILEGE(DE_WB_PRIVILEGE)
+    .DE_WB_PRIVILEGE(DE_WB_PRIVILEGE),
+    .OUT_DE_CSR_DATA(OUT_DE_CSR_DATA),
+    .WB_RFD(WB_RFD),
+    .WB_CSRFD(WB_CSRFD),
+    .OUT_DE_ST_CSR(OUT_DE_ST_CSR)
 );
 endmodule

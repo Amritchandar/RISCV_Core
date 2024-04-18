@@ -40,6 +40,7 @@ module decode_stage(
     output DE_Context_Switch,
     output IE
 );
+
 `define DE_Cst_Unsigned control_signals[18]
 wire [18:0] control_signals;
 control_store control_store (.address({DE_IR[6:0], DE_IR[14:12], DE_IR[30], DE_IR[25]}), .control_signals(control_signals));

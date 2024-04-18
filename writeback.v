@@ -47,7 +47,7 @@ assign OUT_DE_WB_PC = WB_NPC;
 //Stores to the register file
 assign OUT_DE_REG_WEN = (`WB_Cst_Reg_Wen) && WB_V;
 assign OUT_DE_DR = `DR;
-assign OUT_DE_Data = (`WB_Cst_W) ? {32'b0, WB_RES[31:0]} : WB_RES;
+assign OUT_DE_Data = (WB_IR[6:0] == 7'b1110011)? WB_RFD:(`WB_Cst_W) ? {32'b0, WB_RES[31:0]} : WB_RES;
 assign OUT_DE_ST_CSR = (WB_IR[6:0] == 7'b1110011) ? 1'b1 : 1'b0;
 assign OUT_DE_CSR_DATA = WB_CSRFD;
 assign V_OUT_FE_BR_STALL = WB_V && ((WB_IR[6:2] ==5'b11000) || (WB_IR[6:2] ==5'b11001) || (WB_IR[6:2] ==5'b11011));
@@ -60,7 +60,7 @@ trap_handler Thandler(
     .ECALL(WB_ECALL),
     .F_IAM(FE_IAM),
     .F_IAF(1'd0),
-    .F_II(F_II),
+    .F_II(FE_II),
     .MEM_LAM(1'd0),
     .MEM_LAF(1'd0),
     .MEM_SAM(1'd0),
