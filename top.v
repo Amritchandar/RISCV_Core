@@ -2,7 +2,17 @@ module top(
     input CLK,
     input RESET,
     input INTERRUPT
+//    input [31:0] MEM_Data_Out_i,
+//    output MEM_V,
+//    output MEM_Cst_R_W,
+//    output [2:0] MEM_Cst_Size,
+//    output [31:0] MEM_RES_o,
+//    output [31:0] MEM_Address_o
 );
+
+
+
+
 
 wire flush;
 
@@ -24,14 +34,14 @@ wire [63:0] MEM_Target_Address, MEM_RES, MEM_NPC, MEM_Address, MEM_CSRFD, MEM_RF
 wire [31:0] MEM_IR;
 wire [18:0] MEM_Cst;
 wire [4:0] EXE_DR;
-wire MEM_V, MEM_PC_MUX, V_EXE_FE_BR_STALL, V_EXE_FE_TRAP_STALL;
+wire MEM_PC_MUX, V_EXE_FE_BR_STALL, V_EXE_FE_TRAP_STALL;
 
 //Memory Stage
 wire [63:0] WB_RES, WB_NPC, WB_Target_Address;
 wire [31:0] WB_IR;
 wire [18:0] WB_Cst;
 wire [4:0] MEM_DR;
-wire V_MEM_FE_BR_STALL, WB_V, WB_PC_MUX, V_MEM_FE_TRAP_STALL;
+wire V_MEM_FE_BR_STALL, WB_V, WB_PC_MUX, V_MEM_FE_TRAP_STALL, MEM_LAM, MEM_SAM;
 
 //Writeback Stage
 wire [63:0] OUT_FE_Target_Address, OUT_DE_Data, OUT_DE_CSR_DATA, OUT_DE_CAUSE, OUT_DE_WB_PC, WB_CSRFD, WB_RFD;
@@ -39,7 +49,12 @@ wire [4:0] OUT_DE_DR, WB_DR;
 wire [31:0] OUT_DE_IR;
 wire OUT_FE_PC_MUX, OUT_DE_REG_WEN, V_OUT_FE_BR_STALL, OUT_DE_ST_CSR, OUT_DE_CS;
 
-assign flush = (DE_Context_Switch || FE_IAM || FE_II);
+assign flush = (DE_Context_Switch || FE_IAM || FE_II || MEM_SAM || MEM_LAM);
+
+//assign MEM_Data_Out = {32'b0, MEM_Data_Out_i[31:0]};
+assign MEM_RES_o = MEM_RES[31:0];
+assign MEM_Address_o = MEM_Address[31:0];
+
 
 fetch fetch_stage (
     .CLK(CLK), 
@@ -162,7 +177,12 @@ memory memory_stage (
     .MEM_CSRFD(MEM_CSRFD),
     .WB_RFD(WB_RFD),
     .WB_CSRFD(WB_CSRFD),
-    .IE(IE)
+    .IE(IE),
+    .MEM_Data_Out(MEM_Data_Out),
+    .MEM_Cst_R_W(MEM_Cst_R_W),
+    .MEM_Cst_Size(MEM_Cst_Size),
+    .MEM_SAM(MEM_SAM),
+    .MEM_LAM(MEM_LAM)
 );
 
 writeback writeback_stage (
@@ -186,6 +206,8 @@ writeback writeback_stage (
     .OUT_DE_CAUSE(OUT_DE_CAUSE),
     .FE_IAM(FE_IAM),
     .FE_II(FE_II),
+    .MEM_SAM(MEM_SAM),
+    .MEM_LAM(MEM_LAM),
     .UART(INTERRUPT),
     .OUT_DE_WB_PC(OUT_DE_WB_PC),
     .OUT_DE_IR(OUT_DE_IR),
